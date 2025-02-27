@@ -1,4 +1,4 @@
-module github.com/seu-usuario/music-stream
+module github.com/beriloqueiroz/music-stream
 
 go 1.21
 

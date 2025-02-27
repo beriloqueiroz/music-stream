@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/seu-usuario/music-stream/internal/auth"
+	"github.com/beriloqueiroz/music-stream/internal/auth"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
