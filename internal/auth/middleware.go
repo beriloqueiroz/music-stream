@@ -8,6 +8,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type contextKey string
+
+const (
+	userIDKey  contextKey = "user_id"
+	emailKey   contextKey = "email"
+	isAdminKey contextKey = "is_admin"
+)
+
 func (s *Service) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
@@ -40,9 +48,9 @@ func (s *Service) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "user_id", claims["user_id"])
-		ctx = context.WithValue(ctx, "email", claims["email"])
-		ctx = context.WithValue(ctx, "is_admin", claims["is_admin"])
+		ctx := context.WithValue(r.Context(), userIDKey, claims["user_id"])
+		ctx = context.WithValue(ctx, emailKey, claims["email"])
+		ctx = context.WithValue(ctx, isAdminKey, claims["is_admin"])
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
