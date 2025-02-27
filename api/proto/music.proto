@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package music;
+option go_package = "github.com/seu-usuario/music-stream/api/proto";
+
+service MusicService {
+  // Stream de música
+  rpc StreamMusic(StreamRequest) returns (stream AudioChunk) {}
+  
+  // Busca de músicas
+  rpc SearchMusic(SearchRequest) returns (SearchResponse) {}
+  
+  // Upload de música
+  rpc UploadMusic(stream UploadRequest) returns (UploadResponse) {}
+}
+
+message StreamRequest {
+  string music_id = 1;
+  int32 start_position = 2;
+}
+
+message AudioChunk {
+  bytes data = 1;
+  int32 sequence_number = 2;
+}
+
+message SearchRequest {
+  string query = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message SearchResponse {
+  repeated Music music_list = 1;
+  int32 total = 2;
+}
+
+message Music {
+  string id = 1;
+  string title = 2;
+  string artist = 3;
+  string album = 4;
+  int32 duration = 5;
+}
+
+message UploadRequest {
+  oneof data {
+    MusicMetadata metadata = 1;
+    bytes chunk_data = 2;
+  }
+}
+
+message MusicMetadata {
+  string title = 1;
+  string artist = 2;
+  string album = 3;
+}
+
+message UploadResponse {
+  string music_id = 1;
+  bool success = 2;
+  string message = 3;
+} 
