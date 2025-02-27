@@ -52,10 +52,10 @@ func (s *Service) Register(ctx context.Context, email, password, inviteCode stri
 	// Verificar se o convite existe e é válido
 	invite := &models.Invite{}
 	err := s.invitesColl.FindOne(ctx, bson.M{
-		"code":      inviteCode,
-		"email":     email,
-		"used":      false,
-		"expiresAt": bson.M{"$gt": time.Now()},
+		"code":       inviteCode,
+		"email":      email,
+		"used":       false,
+		"expires_at": bson.M{"$gt": time.Now()},
 	}).Decode(invite)
 
 	if err != nil {

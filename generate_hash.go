@@ -14,4 +14,12 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("Hash da senha: %s\n", string(hash))
+
+	// Teste de verificação
+	err = bcrypt.CompareHashAndPassword(hash, password)
+	if err != nil {
+		fmt.Println("Falha na verificação:", err)
+	} else {
+		fmt.Println("Verificação bem sucedida!")
+	}
 }
