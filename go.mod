@@ -5,6 +5,9 @@ go 1.22
 toolchain go1.22.2
 
 require (
+	github.com/aws/aws-sdk-go v1.55.6
+	github.com/dhowden/tag v0.0.0-20230630033851-978a0926ee25
+	github.com/faiface/beep v1.1.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	go.mongodb.org/mongo-driver v1.12.1
 	golang.org/x/crypto v0.30.0
@@ -13,10 +16,10 @@ require (
 )
 
 require (
-	github.com/faiface/beep v1.1.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/hajimehoshi/go-mp3 v0.3.0 // indirect
 	github.com/hajimehoshi/oto v0.7.1 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pkg/errors v0.9.1 // indirect

@@ -8,10 +8,12 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
+	"github.com/dhowden/tag"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
@@ -28,13 +30,19 @@ type PlayerControls struct {
 func main() {
 	// Flags para controlar o modo de operação
 	downloadPtr := flag.Bool("download", false, "Baixar a música em vez de reproduzir")
+	uploadPtr := flag.Bool("upload", false, "Fazer upload de música")
 	outputPtr := flag.String("output", "musica_baixada.mp3", "Nome do arquivo de saída para download")
+
+	// Novas flags para metadados
+	titlePtr := flag.String("title", "", "Título da música")
+	artistPtr := flag.String("artist", "", "Nome do artista")
+	albumPtr := flag.String("album", "", "Nome do álbum")
+
 	flag.Parse()
 
 	if len(flag.Args()) < 1 {
-		log.Fatal("Uso: go run main.go [-download] [-output filename] <music_id>")
+		log.Fatal("Uso: go run main.go [-download|-upload] [-output filename] <music_id|filepath>")
 	}
-	musicID := flag.Args()[0]
 
 	// Conectar ao servidor gRPC
 	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -45,10 +53,19 @@ func main() {
 
 	client := pb.NewMusicServiceClient(conn)
 
-	if *downloadPtr {
-		downloadMusic(client, musicID, *outputPtr)
+	if *uploadPtr {
+		err := uploadMusic(client, flag.Args()[0], &UploadOptions{
+			Title:  *titlePtr,
+			Artist: *artistPtr,
+			Album:  *albumPtr,
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if *downloadPtr {
+		downloadMusic(client, flag.Args()[0], *outputPtr)
 	} else {
-		playMusic(client, musicID)
+		playMusic(client, flag.Args()[0])
 	}
 }
 
@@ -189,4 +206,106 @@ func getStatus(isPaused bool) string {
 		return "Pausado"
 	}
 	return "Reproduzindo"
+}
+
+type UploadOptions struct {
+	Title  string
+	Artist string
+	Album  string
+}
+
+func uploadMusic(client pb.MusicServiceClient, filePath string, opts *UploadOptions) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("erro ao abrir arquivo: %v", err)
+	}
+	defer file.Close()
+
+	// Extrair metadados do MP3
+	metadata, err := tag.ReadFrom(file)
+	if err != nil {
+		log.Printf("Aviso: não foi possível ler metadados: %v", err)
+	}
+
+	// Voltar ao início do arquivo após ler os metadados
+	file.Seek(0, 0)
+
+	stream, err := client.UploadMusic(context.Background())
+	if err != nil {
+		return fmt.Errorf("erro ao iniciar upload: %v", err)
+	}
+
+	// Usar valores fornecidos ou extrair dos metadados
+	fileName := filepath.Base(filePath)
+	title := opts.Title
+	artist := opts.Artist
+	album := opts.Album
+
+	// Se não foram fornecidos, tentar extrair do arquivo
+	if title == "" || artist == "" || album == "" {
+		if metadata != nil {
+			if title == "" && metadata.Title() != "" {
+				title = metadata.Title()
+			}
+			if artist == "" && metadata.Artist() != "" {
+				artist = metadata.Artist()
+			}
+			if album == "" && metadata.Album() != "" {
+				album = metadata.Album()
+			}
+		}
+	}
+
+	// Usar valores padrão se ainda estiverem vazios
+	if title == "" {
+		title = fileName
+	}
+	if artist == "" {
+		artist = "Desconhecido"
+	}
+	if album == "" {
+		album = "Desconhecido"
+	}
+
+	err = stream.Send(&pb.UploadRequest{
+		Data: &pb.UploadRequest_Metadata{
+			Metadata: &pb.MusicMetadata{
+				Title:  title,
+				Artist: artist,
+				Album:  album,
+			},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("erro ao enviar metadata: %v", err)
+	}
+
+	// Enviar chunks do arquivo
+	buffer := make([]byte, 1024*32)
+	for {
+		n, err := file.Read(buffer)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("erro ao ler arquivo: %v", err)
+		}
+
+		err = stream.Send(&pb.UploadRequest{
+			Data: &pb.UploadRequest_ChunkData{
+				ChunkData: buffer[:n],
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("erro ao enviar chunk: %v", err)
+		}
+	}
+
+	response, err := stream.CloseAndRecv()
+	if err != nil {
+		return fmt.Errorf("erro ao finalizar upload: %v", err)
+	}
+
+	fmt.Printf("Upload concluído! ID: %s\n", response.MusicId)
+	return nil
 }
