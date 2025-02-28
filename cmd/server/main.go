@@ -8,14 +8,49 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
 	"github.com/beriloqueiroz/music-stream/internal/auth"
 	"github.com/beriloqueiroz/music-stream/internal/music"
-	"github.com/beriloqueiroz/music-stream/pkg/storage/local"
+	"github.com/beriloqueiroz/music-stream/pkg/storage"
+	"github.com/beriloqueiroz/music-stream/pkg/storage/s3"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 )
+
+func getStorage() storage.MusicStorage {
+	if os.Getenv("ENV") == "production" {
+		sess, err := session.NewSession(&aws.Config{
+			Region: aws.String("us-east-1"),
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+		return s3.NewS3Storage(os.Getenv("S3_BUCKET"), sess)
+	}
+
+	// Desenvolvimento: usar MinIO
+	sess, err := session.NewSession(&aws.Config{
+		Endpoint: aws.String(os.Getenv("MINIO_ENDPOINT")),
+		Region:   aws.String("us-east-1"),
+		Credentials: credentials.NewStaticCredentials(
+			os.Getenv("MINIO_ACCESS_KEY"),
+			os.Getenv("MINIO_SECRET_KEY"),
+			"",
+		),
+		S3ForcePathStyle:              aws.Bool(true),
+		DisableSSL:                    aws.Bool(true),
+		S3DisableContentMD5Validation: aws.Bool(true),
+		DisableEndpointHostPrefix:     aws.Bool(true),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return s3.NewS3Storage(os.Getenv("BUCKET_NAME"), sess)
+}
 
 func main() {
 	// Configuração do MongoDB
@@ -55,11 +90,9 @@ func main() {
 	authService := auth.NewAuthService(db, jwtSecret)
 	authHandler := auth.NewHandler(authService)
 
-	// Criar storage
-	musicStorage := local.NewLocalStorage("./storage/music")
-
-	// Criar serviço com storage
-	musicService := music.NewMusicService(db, musicStorage)
+	// Configurar S3 (exemplo)
+	storage := getStorage()
+	musicService := music.NewMusicService(db, storage)
 
 	// Configuração do gRPC
 	grpcServer := grpc.NewServer()
