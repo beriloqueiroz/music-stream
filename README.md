@@ -56,8 +56,8 @@ Este é um projeto de streaming de música para uso pessoal e familiar, com um s
 - [ ] Upload de arquivos de letra (texto).
 - [ ] Upload de arquivos de cifra (texto).
 - [x] Armazenamento de metadados (título, artista, álbum, duração, etc.).
-- [ ] Estrutura organizada para fácil acesso e busca.
-- [ ] Suporte a playlists personalizadas.
+- [x] Busca por musica.
+- [x] Suporte a playlists personalizadas.
 
 ### 3. Streaming de Música com gRPC
 

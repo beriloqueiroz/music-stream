@@ -14,6 +14,7 @@ import (
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
 	"github.com/beriloqueiroz/music-stream/internal/auth"
 	"github.com/beriloqueiroz/music-stream/internal/music"
+	"github.com/beriloqueiroz/music-stream/internal/playlist"
 	"github.com/beriloqueiroz/music-stream/pkg/storage"
 	"github.com/beriloqueiroz/music-stream/pkg/storage/s3"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -114,30 +115,22 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Rotas de autenticação
-	mux.HandleFunc("/api/auth/register", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
-			return
-		}
-		authHandler.Register(w, r)
-	})
+	mux.HandleFunc("POST /api/auth/register", authHandler.Register)
+	mux.HandleFunc("POST /api/auth/login", authHandler.Login)
+	mux.HandleFunc("POST /api/invites", authHandler.CreateInvite)
 
-	mux.HandleFunc("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
-			return
-		}
-		authHandler.Login(w, r)
-	})
+	// Rotas de playlists
 
-	// Rota protegida para criar convites (apenas admin)
-	mux.Handle("/api/invites", authService.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
-			return
-		}
-		authHandler.CreateInvite(w, r)
-	})))
+	playlistService := playlist.NewPlaylistService(db)
+	playlistHandler := playlist.NewHandler(playlistService)
+
+	mux.Handle("POST /api/playlists", authService.AuthMiddleware(http.HandlerFunc(playlistHandler.CreatePlaylist)))
+	mux.Handle("GET /api/playlists/{id}", authService.AuthMiddleware(http.HandlerFunc(playlistHandler.GetPlaylist)))
+	mux.Handle("PUT /api/playlists/{id}", authService.AuthMiddleware(http.HandlerFunc(playlistHandler.UpdatePlaylist)))
+	mux.Handle("DELETE /api/playlists/{id}", authService.AuthMiddleware(http.HandlerFunc(playlistHandler.DeletePlaylist)))
+	mux.Handle("POST /api/playlists/{id}/musics", authService.AuthMiddleware(http.HandlerFunc(playlistHandler.AddMusicInPlaylist)))
+	mux.Handle("DELETE /api/playlists/{id}/musics/{musicId}", authService.AuthMiddleware(http.HandlerFunc(playlistHandler.RemoveMusicInPlaylist)))
+	mux.Handle("GET /api/playlists/{id}/musics", authService.AuthMiddleware(http.HandlerFunc(playlistHandler.GetPlaylist)))
 
 	// Configuração do servidor
 	srv := &http.Server{

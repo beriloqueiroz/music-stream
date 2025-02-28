@@ -52,3 +52,20 @@ type Invite struct {
 	ExpiresAt time.Time          `bson:"expires_at" json:"expires_at"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 }
+
+// playlist
+type Playlist struct {
+	ID        string          `bson:"_id,omitempty" json:"id"`
+	Name      string          `bson:"name" json:"name"`
+	CreatedAt time.Time       `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time       `bson:"updated_at" json:"updated_at"`
+	Musics    []PlaylistMusic `bson:"musics" json:"musics"`
+	OwnerID   string          `bson:"owner_id" json:"owner_id"`
+}
+
+type PlaylistMusic struct {
+	ID         string    `bson:"_id,omitempty" json:"id"`
+	PlaylistID string    `bson:"playlist_id" json:"playlist_id"`
+	MusicID    string    `bson:"music_id" json:"music_id"`
+	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+}
