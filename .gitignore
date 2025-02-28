@@ -1,6 +1,7 @@
 # Arquivos de música
 *.mp3
 storage/music/*
+docker/*
 !storage/music/.gitkeep
 
 # Arquivos temporários

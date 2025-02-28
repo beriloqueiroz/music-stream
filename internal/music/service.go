@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Service struct {
@@ -143,4 +144,31 @@ func (s *Service) UploadMusic(stream pb.MusicService_UploadMusicServer) error {
 		Success: true,
 		Message: "Música enviada com sucesso",
 	})
+}
+
+func (s *Service) SearchMusic(ctx context.Context, in *pb.SearchRequest) (*pb.SearchResponse, error) {
+	query := in.Query
+	page := in.Page
+	limit := in.PageSize
+
+	musics, err := s.musicsColl.Find(ctx, bson.M{
+		"$text": bson.M{"$search": query},
+	}, options.Find().SetSkip(int64(page*limit)).SetLimit(int64(limit)))
+	if err != nil {
+		return nil, err
+	}
+
+	var musicsList []*pb.Music
+	for musics.Next(ctx) {
+		var music = &pb.Music{}
+		if err := musics.Decode(&music); err != nil {
+			return nil, err
+		}
+		musicsList = append(musicsList, music)
+	}
+
+	return &pb.SearchResponse{
+		MusicList: musicsList,
+		Total:     int32(len(musicsList)),
+	}, nil
 }

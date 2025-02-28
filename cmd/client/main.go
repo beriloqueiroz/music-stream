@@ -28,8 +28,10 @@ type PlayerControls struct {
 }
 
 func main() {
+
 	// Flags para controlar o modo de operação
 	downloadPtr := flag.Bool("download", false, "Baixar a música em vez de reproduzir")
+	searchPtr := flag.Bool("search", false, "Buscar música")
 	uploadPtr := flag.Bool("upload", false, "Fazer upload de música")
 	outputPtr := flag.String("output", "musica_baixada.mp3", "Nome do arquivo de saída para download")
 
@@ -53,7 +55,12 @@ func main() {
 
 	client := pb.NewMusicServiceClient(conn)
 
-	if *uploadPtr {
+	if *searchPtr {
+		err := searchMusic(client, flag.Args()[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if *uploadPtr {
 		err := uploadMusic(client, flag.Args()[0], &UploadOptions{
 			Title:  *titlePtr,
 			Artist: *artistPtr,
@@ -307,5 +314,22 @@ func uploadMusic(client pb.MusicServiceClient, filePath string, opts *UploadOpti
 	}
 
 	fmt.Printf("Upload concluído! ID: %s\n", response.MusicId)
+	return nil
+}
+
+func searchMusic(client pb.MusicServiceClient, query string) error {
+	response, err := client.SearchMusic(context.Background(), &pb.SearchRequest{
+		Query:    query,
+		Page:     0,
+		PageSize: 10,
+	})
+	if err != nil {
+		return fmt.Errorf("erro ao buscar música: %v", err)
+	}
+
+	fmt.Printf("Resultados encontrados: %d\n", response.Total)
+	for _, music := range response.MusicList {
+		fmt.Printf("ID: %s, Título: %s, Artista: %s, Álbum: %s\n", music.Id, music.Title, music.Artist, music.Album)
+	}
 	return nil
 }
