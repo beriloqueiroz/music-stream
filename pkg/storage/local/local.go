@@ -7,22 +7,15 @@ import (
 )
 
 type LocalStorage struct {
-	baseDir string
+	basePath string
 }
 
-func NewLocalStorage(baseDir string) *LocalStorage {
-	return &LocalStorage{
-		baseDir: baseDir,
-	}
-}
-
-func (s *LocalStorage) GetMusic(id string) (io.ReadCloser, error) {
-	path := filepath.Join(s.baseDir, id+".mp3")
-	return os.Open(path)
+func NewLocalStorage(basePath string) *LocalStorage {
+	return &LocalStorage{basePath: basePath}
 }
 
 func (s *LocalStorage) SaveMusic(id string, data io.Reader) error {
-	path := filepath.Join(s.baseDir, id+".mp3")
+	path := filepath.Join(s.basePath, id)
 	file, err := os.Create(path)
 	if err != nil {
 		return err
@@ -33,7 +26,12 @@ func (s *LocalStorage) SaveMusic(id string, data io.Reader) error {
 	return err
 }
 
+func (s *LocalStorage) GetMusic(id string) (io.ReadCloser, error) {
+	path := filepath.Join(s.basePath, id)
+	return os.Open(path)
+}
+
 func (s *LocalStorage) DeleteMusic(id string) error {
-	path := filepath.Join(s.baseDir, id+".mp3")
+	path := filepath.Join(s.basePath, id)
 	return os.Remove(path)
 }
