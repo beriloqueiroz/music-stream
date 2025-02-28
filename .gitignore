@@ -32,4 +32,7 @@ tmp/
 *.log
 
 # Arquivos de cache
-.DS_Store 
+.DS_Store
+
+# Arquivos de teste de integração
+test/integration/storage_test.go 
