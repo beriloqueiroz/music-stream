@@ -80,7 +80,10 @@ func (s *Service) StreamMusic(req *pb.StreamRequest, stream pb.MusicService_Stre
 
 func (s *Service) UploadMusic(stream pb.MusicService_UploadMusicServer) error {
 	var metadata *pb.MusicMetadata
-	storageID := primitive.NewObjectID().Hex()
+
+	// Gerar um único ID para usar em ambos os lugares
+	id := primitive.NewObjectID()
+	storageID := id.Hex()
 
 	// Buffer para acumular os chunks
 	var buffer bytes.Buffer
@@ -119,7 +122,7 @@ func (s *Service) UploadMusic(stream pb.MusicService_UploadMusicServer) error {
 
 	// Salvar no MongoDB
 	music := &models.Music{
-		ID:        primitive.NewObjectID(),
+		ID:        id,
 		Title:     metadata.Title,
 		Artist:    metadata.Artist,
 		Album:     metadata.Album,
@@ -136,7 +139,7 @@ func (s *Service) UploadMusic(stream pb.MusicService_UploadMusicServer) error {
 	}
 
 	return stream.SendAndClose(&pb.UploadResponse{
-		MusicId: music.ID.Hex(),
+		MusicId: storageID,
 		Success: true,
 		Message: "Música enviada com sucesso",
 	})
