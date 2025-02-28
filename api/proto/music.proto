@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package music;
-option go_package = "github.com/seu-usuario/music-stream/api/proto";
+option go_package = "github.com/beriloqueiroz/music-stream/api/proto";
 
 service MusicService {
   // Stream de música

@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
 
+	pb "github.com/beriloqueiroz/music-stream/api/proto"
 	"github.com/beriloqueiroz/music-stream/internal/auth"
+	"github.com/beriloqueiroz/music-stream/internal/music"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -49,6 +53,25 @@ func main() {
 
 	authService := auth.NewAuthService(db, jwtSecret)
 	authHandler := auth.NewHandler(authService)
+
+	// Configuração do serviço de música
+	musicService := music.NewMusicService(db, "./storage/music")
+
+	// Configuração do gRPC
+	grpcServer := grpc.NewServer()
+	pb.RegisterMusicServiceServer(grpcServer, musicService)
+
+	// Iniciar servidor gRPC
+	go func() {
+		lis, err := net.Listen("tcp", ":50051")
+		if err != nil {
+			log.Fatalf("Falha ao iniciar servidor gRPC: %v", err)
+		}
+		log.Printf("Servidor gRPC iniciado na porta 50051")
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Falha ao servir gRPC: %v", err)
+		}
+	}()
 
 	// Configuração das rotas
 	mux := http.NewServeMux()

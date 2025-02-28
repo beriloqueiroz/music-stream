@@ -5,10 +5,13 @@ services:
     build: .
     ports:
       - "8080:8080"
+      - "50051:50051"
     environment:
       - MONGODB_URI=mongodb://mongodb:27017
       - JWT_SECRET=bb#123$joao
       - DB_NAME=musicstream
+    volumes:
+      - ./storage/music:/app/storage/music
     depends_on:
       - mongodb
     networks:

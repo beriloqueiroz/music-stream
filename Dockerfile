@@ -1,22 +1,27 @@
-FROM golang:1.21-alpine
+# Usar a versão específica do Go
+FROM golang:1.22.2-alpine
 
 WORKDIR /app
 
-# Adicionar git para poder baixar as dependências
-RUN apk add --no-cache git
+# Instalar dependências necessárias
+RUN apk add --no-cache git protobuf-dev
 
-COPY go.mod ./
-# Remover a cópia do go.sum já que ele pode não existir ainda
-# COPY go.sum ./
+# Copiar os arquivos de definição de módulo
+COPY go.mod go.sum ./
 
-# Baixar todas as dependências
+# Baixar dependências
 RUN go mod download
-RUN go mod tidy
 
+# Copiar o resto do código
 COPY . .
 
+# Criar diretório para armazenamento de músicas
+RUN mkdir -p storage/music
+
+# Compilar a aplicação
 RUN go build -o main ./cmd/server
 
-EXPOSE 8080
+# Expor as portas HTTP e gRPC
+EXPOSE 8080 50051
 
-CMD ["./main"] 
+CMD ["./main"]

@@ -1,0 +1,44 @@
+package music
+
+import (
+	"io"
+	"net/http"
+	"strings"
+)
+
+type Handler struct {
+	service *Service
+}
+
+func NewHandler(service *Service) *Handler {
+	return &Handler{service: service}
+}
+
+func (h *Handler) StreamMusic(w http.ResponseWriter, r *http.Request) {
+	// Extrair ID da música da URL
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 4 {
+		http.Error(w, "ID da música não fornecido", http.StatusBadRequest)
+		return
+	}
+	musicID := parts[len(parts)-1]
+
+	// Obter stream da música
+	stream, err := h.service.StreamMusic(r.Context(), musicID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	defer stream.Close()
+
+	// Configurar headers
+	w.Header().Set("Content-Type", "audio/mpeg")
+	w.Header().Set("Transfer-Encoding", "chunked")
+
+	// Stream do arquivo
+	_, err = io.Copy(w, stream)
+	if err != nil {
+		http.Error(w, "Erro ao transmitir arquivo", http.StatusInternalServerError)
+		return
+	}
+}
