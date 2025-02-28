@@ -11,6 +11,7 @@ import (
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
 	"github.com/beriloqueiroz/music-stream/internal/auth"
 	"github.com/beriloqueiroz/music-stream/internal/music"
+	"github.com/beriloqueiroz/music-stream/pkg/storage/local"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
@@ -54,8 +55,11 @@ func main() {
 	authService := auth.NewAuthService(db, jwtSecret)
 	authHandler := auth.NewHandler(authService)
 
-	// Configuração do serviço de música
-	musicService := music.NewMusicService(db, "./storage/music")
+	// Criar storage
+	musicStorage := local.NewLocalStorage("./storage/music")
+
+	// Criar serviço com storage
+	musicService := music.NewMusicService(db, musicStorage)
 
 	// Configuração do gRPC
 	grpcServer := grpc.NewServer()

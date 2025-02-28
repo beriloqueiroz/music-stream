@@ -3,10 +3,10 @@ package music
 import (
 	"context"
 	"io"
-	"os"
 
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
 	"github.com/beriloqueiroz/music-stream/pkg/models"
+	"github.com/beriloqueiroz/music-stream/pkg/storage"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,14 +16,14 @@ type Service struct {
 	pb.UnimplementedMusicServiceServer
 	db         *mongo.Database
 	musicsColl *mongo.Collection
-	storageDir string
+	storage    storage.MusicStorage
 }
 
-func NewMusicService(db *mongo.Database, storageDir string) *Service {
+func NewMusicService(db *mongo.Database, storage storage.MusicStorage) *Service {
 	return &Service{
 		db:         db,
 		musicsColl: db.Collection("musics"),
-		storageDir: storageDir,
+		storage:    storage,
 	}
 }
 
@@ -43,22 +43,17 @@ func (s *Service) GetMusic(ctx context.Context, id string) (*models.Music, error
 }
 
 func (s *Service) StreamMusic(req *pb.StreamRequest, stream pb.MusicService_StreamMusicServer) error {
-	music, err := s.GetMusic(stream.Context(), req.MusicId)
+	reader, err := s.storage.GetMusic(req.MusicId)
 	if err != nil {
 		return err
 	}
+	defer reader.Close()
 
-	file, err := os.Open(music.FilePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	buffer := make([]byte, 1024*32) // 32KB chunks
+	buffer := make([]byte, 1024*32)
 	sequence := int32(0)
 
 	for {
-		n, err := file.Read(buffer)
+		n, err := reader.Read(buffer)
 		if err == io.EOF {
 			break
 		}

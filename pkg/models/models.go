@@ -12,7 +12,7 @@ type Music struct {
 	Artist    string             `bson:"artist" json:"artist"`
 	Album     string             `bson:"album" json:"album"`
 	Duration  int32              `bson:"duration" json:"duration"`
-	FilePath  string             `bson:"file_path" json:"file_path"`
+	StorageID string             `bson:"storage_id" json:"storage_id"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
 }
