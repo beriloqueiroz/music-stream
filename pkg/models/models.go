@@ -11,10 +11,29 @@ type Music struct {
 	Title     string             `bson:"title" json:"title"`
 	Artist    string             `bson:"artist" json:"artist"`
 	Album     string             `bson:"album" json:"album"`
-	Duration  int32              `bson:"duration" json:"duration"`
 	StorageID string             `bson:"storage_id" json:"storage_id"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
+	Lyrics    *Lyrics            `bson:"lyrics,omitempty" json:"lyrics,omitempty"`
+	Tablature *Tablature         `bson:"tablature,omitempty" json:"tablature,omitempty"`
+}
+
+type Lyrics struct {
+	Text     string    `bson:"text" json:"text"`         // Letra completa
+	Timing   []Segment `bson:"timing" json:"timing"`     // Temporização
+	Language string    `bson:"language" json:"language"` // Idioma da letra
+}
+
+type Tablature struct {
+	Content string    `bson:"content" json:"content"` // Cifra/Tablatura
+	Timing  []Segment `bson:"timing" json:"timing"`   // Temporização
+	Format  string    `bson:"format" json:"format"`   // Formato (chord pro, etc)
+}
+
+type Segment struct {
+	Start   float64 `bson:"start" json:"start"`     // Tempo em segundos
+	End     float64 `bson:"end" json:"end"`         // Tempo em segundos
+	Content string  `bson:"content" json:"content"` // Trecho da letra/cifra
 }
 
 type User struct {
