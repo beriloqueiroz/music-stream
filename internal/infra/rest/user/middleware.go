@@ -1,4 +1,4 @@
-package auth
+package rest_server_user
 
 import (
 	"context"
@@ -8,6 +8,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type UserMiddlewares struct {
+	jwtSecret []byte
+}
+
+func NewUserMiddlewares(jwtSecret []byte) *UserMiddlewares {
+	return &UserMiddlewares{jwtSecret: jwtSecret}
+}
+
 type contextKey string
 
 const (
@@ -16,7 +24,7 @@ const (
 	isAdminKey contextKey = "is_admin"
 )
 
-func (s *Service) AuthMiddleware(next http.Handler) http.Handler {
+func (s *UserMiddlewares) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {

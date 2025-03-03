@@ -1,16 +1,18 @@
-package playlist
+package rest_server_playlist
 
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/beriloqueiroz/music-stream/internal/application"
 )
 
-type Handler struct {
-	service *Service
+type PlaylistHandler struct {
+	service *application.PlaylistService
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewPlaylistHandler(service *application.PlaylistService) *PlaylistHandler {
+	return &PlaylistHandler{service: service}
 }
 
 type createPlaylistRequest struct {
@@ -35,7 +37,7 @@ type deletePlaylistRequest struct {
 type getPlaylistRequest struct {
 }
 
-func (h *Handler) CreatePlaylist(w http.ResponseWriter, r *http.Request) {
+func (h *PlaylistHandler) CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 	var req createPlaylistRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -56,7 +58,7 @@ func (h *Handler) CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /api/playlists/{id}/musics
-func (h *Handler) AddMusicInPlaylist(w http.ResponseWriter, r *http.Request) {
+func (h *PlaylistHandler) AddMusicInPlaylist(w http.ResponseWriter, r *http.Request) {
 	var req addMusicInPlaylistRequest
 	playlistID := r.PathValue("id")
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -78,7 +80,7 @@ func (h *Handler) AddMusicInPlaylist(w http.ResponseWriter, r *http.Request) {
 }
 
 // DELETE /api/playlists/{id}/musics/{musicId}
-func (h *Handler) RemoveMusicInPlaylist(w http.ResponseWriter, r *http.Request) {
+func (h *PlaylistHandler) RemoveMusicInPlaylist(w http.ResponseWriter, r *http.Request) {
 	var req removeMusicInPlaylistRequest
 	playlistID := r.PathValue("id")
 	musicID := r.PathValue("musicId")
@@ -100,7 +102,7 @@ func (h *Handler) RemoveMusicInPlaylist(w http.ResponseWriter, r *http.Request) 
 }
 
 // PUT /api/playlists/{id}
-func (h *Handler) UpdatePlaylist(w http.ResponseWriter, r *http.Request) {
+func (h *PlaylistHandler) UpdatePlaylist(w http.ResponseWriter, r *http.Request) {
 	var req updatePlaylistRequest
 	playlistID := r.PathValue("id")
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -121,7 +123,7 @@ func (h *Handler) UpdatePlaylist(w http.ResponseWriter, r *http.Request) {
 }
 
 // DELETE /api/playlists/{id}
-func (h *Handler) DeletePlaylist(w http.ResponseWriter, r *http.Request) {
+func (h *PlaylistHandler) DeletePlaylist(w http.ResponseWriter, r *http.Request) {
 	var req deletePlaylistRequest
 	playlistID := r.PathValue("id")
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -142,7 +144,7 @@ func (h *Handler) DeletePlaylist(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /api/playlists/{id}/musics
-func (h *Handler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
+func (h *PlaylistHandler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
 	var req getPlaylistRequest
 	playlistID := r.PathValue("id")
 	if playlistID == "" {
@@ -168,7 +170,7 @@ func (h *Handler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /api/playlists
-func (h *Handler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
+func (h *PlaylistHandler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
 	var req getPlaylistRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

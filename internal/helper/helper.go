@@ -1,6 +1,8 @@
 package helper
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"log"
 
@@ -24,4 +26,10 @@ func RemoveFromSlice[T any](slice []T, condition func(T) bool) []T {
 		}
 	}
 	return slice
+}
+
+func GenerateRandomCode() string {
+	b := make([]byte, 6)
+	rand.Read(b)
+	return base64.URLEncoding.EncodeToString(b)[:8]
 }

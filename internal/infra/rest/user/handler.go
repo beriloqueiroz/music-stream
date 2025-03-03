@@ -1,16 +1,18 @@
-package auth
+package rest_server_user
 
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/beriloqueiroz/music-stream/internal/application"
 )
 
-type Handler struct {
-	service *Service
+type UserHandler struct {
+	service *application.UserService
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewUserHandler(service *application.UserService) *UserHandler {
+	return &UserHandler{service: service}
 }
 
 type registerRequest struct {
@@ -33,7 +35,7 @@ type createInviteRequest struct {
 	Email string `json:"email"`
 }
 
-func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -49,7 +51,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -65,7 +67,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(loginResponse{Token: token, ID: user.ID})
 }
 
-func (h *Handler) CreateInvite(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) CreateInvite(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implementar middleware de autenticação
 	var req createInviteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

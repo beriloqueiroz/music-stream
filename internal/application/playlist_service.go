@@ -1,4 +1,4 @@
-package playlist
+package application
 
 import (
 	"context"
@@ -12,20 +12,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type Service struct {
+type PlaylistService struct {
 	db            *mongo.Database
 	playlistsColl *mongo.Collection
 }
 
-func NewPlaylistService(db *mongo.Database) *Service {
-	return &Service{
+func NewPlaylistService(db *mongo.Database) *PlaylistService {
+	return &PlaylistService{
 		db:            db,
 		playlistsColl: db.Collection("playlists"),
 	}
 }
 
 // make a crud
-func (s *Service) CreatePlaylist(ctx context.Context, name string, ownerID string) (*models.Playlist, error) {
+func (s *PlaylistService) CreatePlaylist(ctx context.Context, name string, ownerID string) (*models.Playlist, error) {
 	if name == "" || ownerID == "" {
 		return nil, errors.New("name and ownerID are required")
 	}
@@ -44,7 +44,7 @@ func (s *Service) CreatePlaylist(ctx context.Context, name string, ownerID strin
 	return playlist, nil
 }
 
-func (s *Service) GetPlaylist(ctx context.Context, id string, ownerID string) (*models.Playlist, error) {
+func (s *PlaylistService) GetPlaylist(ctx context.Context, id string, ownerID string) (*models.Playlist, error) {
 	if id == "" || ownerID == "" {
 		return nil, errors.New("id and ownerID are required")
 	}
@@ -60,7 +60,7 @@ func (s *Service) GetPlaylist(ctx context.Context, id string, ownerID string) (*
 	return playlist, nil
 }
 
-func (s *Service) UpdatePlaylist(ctx context.Context, id string, name string, ownerID string) (*models.Playlist, error) {
+func (s *PlaylistService) UpdatePlaylist(ctx context.Context, id string, name string, ownerID string) (*models.Playlist, error) {
 	if id == "" || ownerID == "" {
 		return nil, errors.New("id and ownerID are required")
 	}
@@ -76,7 +76,7 @@ func (s *Service) UpdatePlaylist(ctx context.Context, id string, name string, ow
 	return playlist, nil
 }
 
-func (s *Service) DeletePlaylist(ctx context.Context, id string, ownerID string) error {
+func (s *PlaylistService) DeletePlaylist(ctx context.Context, id string, ownerID string) error {
 	if id == "" || ownerID == "" {
 		return errors.New("id and ownerID are required")
 	}
@@ -91,7 +91,7 @@ func (s *Service) DeletePlaylist(ctx context.Context, id string, ownerID string)
 	return nil
 }
 
-func (s *Service) AddMusicToPlaylist(ctx context.Context, playlistID string, musicID string, ownerID string) error {
+func (s *PlaylistService) AddMusicToPlaylist(ctx context.Context, playlistID string, musicID string, ownerID string) error {
 	if playlistID == "" || musicID == "" || ownerID == "" {
 		return errors.New("playlistID, musicID and ownerID are required")
 	}
@@ -123,7 +123,7 @@ func (s *Service) AddMusicToPlaylist(ctx context.Context, playlistID string, mus
 	return nil
 }
 
-func (s *Service) RemoveMusicFromPlaylist(ctx context.Context, playlistID string, musicID string, ownerID string) error {
+func (s *PlaylistService) RemoveMusicFromPlaylist(ctx context.Context, playlistID string, musicID string, ownerID string) error {
 	if playlistID == "" || musicID == "" || ownerID == "" {
 		return errors.New("playlistID, musicID and ownerID are required")
 	}
@@ -146,7 +146,7 @@ func (s *Service) RemoveMusicFromPlaylist(ctx context.Context, playlistID string
 	return nil
 }
 
-func (s *Service) GetPlaylists(ctx context.Context, ownerID string) ([]*models.Playlist, error) {
+func (s *PlaylistService) GetPlaylists(ctx context.Context, ownerID string) ([]*models.Playlist, error) {
 	playlists := []*models.Playlist{}
 	cursor, err := s.playlistsColl.Find(ctx, bson.M{"owner_id": ownerID})
 	if err != nil {

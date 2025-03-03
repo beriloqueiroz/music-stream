@@ -48,12 +48,20 @@ func (u *MongoUser) ToModel() *models.User {
 // by model
 
 func (i *MongoInvite) ByModel(model *models.Invite) {
-	id, err := primitive.ObjectIDFromHex(model.ID)
-	if err != nil {
-		return
+	if model.ID != "" {
+		id, err := primitive.ObjectIDFromHex(model.ID)
+		if err != nil {
+			return
+		}
+		i.ID = id
+	} else {
+		i.ID = primitive.NewObjectID()
 	}
-	i.ID = id
 	i.CreatedAt = model.CreatedAt
+	i.Email = model.Email
+	i.Code = model.Code
+	i.Used = model.Used
+	i.ExpiresAt = model.ExpiresAt
 }
 
 func (u *MongoUser) ByModel(model *models.User) {
@@ -63,4 +71,7 @@ func (u *MongoUser) ByModel(model *models.User) {
 	}
 	u.ID = id
 	u.CreatedAt = model.CreatedAt
+	u.Email = model.Email
+	u.Password = model.Password
+	u.IsAdmin = model.IsAdmin
 }

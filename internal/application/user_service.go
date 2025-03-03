@@ -1,50 +1,39 @@
-package auth
+package application
 
 import (
 	"context"
 	"errors"
 	"time"
 
+	"github.com/beriloqueiroz/music-stream/internal/helper"
 	"github.com/beriloqueiroz/music-stream/pkg/models"
 	"github.com/golang-jwt/jwt/v5"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Service struct {
-	db          *mongo.Database
-	jwtSecret   []byte
-	invitesColl *mongo.Collection
-	usersColl   *mongo.Collection
+type UserService struct {
+	jwtSecret []byte
+	userRepo  UserRepository
 }
 
-func NewAuthService(db *mongo.Database, jwtSecret string) *Service {
-	return &Service{
-		db:          db,
-		jwtSecret:   []byte(jwtSecret),
-		invitesColl: db.Collection("invites"),
-		usersColl:   db.Collection("users"),
+func NewUserService(userRepo UserRepository, jwtSecret []byte) *UserService {
+	return &UserService{
+		userRepo:  userRepo,
+		jwtSecret: jwtSecret,
 	}
 }
 
-func (s *Service) CreateInvite(ctx context.Context, email string, whoIsInvitingId string) (*models.Invite, error) {
-	whoIsInviting := &models.User{}
-	primitiveWhoIsInvitingId, err := primitive.ObjectIDFromHex(whoIsInvitingId)
-	if err != nil {
-		return nil, errors.New("usuário não encontrado")
-	}
-	err = s.usersColl.FindOne(ctx, bson.M{"_id": primitiveWhoIsInvitingId}).Decode(whoIsInviting)
+func (s *UserService) CreateInvite(ctx context.Context, email string, whoIsInvitingId string) (*models.Invite, error) {
+	whoIsInviting, err := s.userRepo.FindByID(ctx, whoIsInvitingId)
 	if err != nil {
 		return nil, errors.New("usuário não encontrado")
 	}
 	if !whoIsInviting.IsAdmin {
 		return nil, errors.New("usuário tem permissão insuficiente para criar convite")
 	}
-	code := generateRandomCode() // Implementar função para gerar código aleatório
+	code := helper.GenerateRandomCode() // Implementar função para gerar código aleatório
 	invite := &models.Invite{
-		ID:        primitive.NewObjectID().Hex(),
 		Code:      code,
 		Email:     email,
 		Used:      false,
@@ -52,7 +41,7 @@ func (s *Service) CreateInvite(ctx context.Context, email string, whoIsInvitingI
 		CreatedAt: time.Now(),
 	}
 
-	_, err = s.invitesColl.InsertOne(ctx, invite)
+	err = s.userRepo.InsertInvite(ctx, invite)
 	if err != nil {
 		return nil, err
 	}
@@ -60,17 +49,13 @@ func (s *Service) CreateInvite(ctx context.Context, email string, whoIsInvitingI
 	return invite, nil
 }
 
-func (s *Service) Register(ctx context.Context, email, password, inviteCode string) error {
+func (s *UserService) Register(ctx context.Context, email, password, inviteCode string) error {
 	// Verificar se o convite existe e é válido
-	invite := &models.Invite{}
-	err := s.invitesColl.FindOne(ctx, bson.M{
-		"code":       inviteCode,
-		"email":      email,
-		"used":       false,
-		"expires_at": bson.M{"$gt": time.Now()},
-	}).Decode(invite)
-
+	invite, err := s.userRepo.FindInviteByCode(ctx, inviteCode)
 	if err != nil {
+		return errors.New("convite inválido ou expirado")
+	}
+	if invite.Email != email || invite.Used || invite.ExpiresAt.Before(time.Now()) {
 		return errors.New("convite inválido ou expirado")
 	}
 
@@ -89,24 +74,23 @@ func (s *Service) Register(ctx context.Context, email, password, inviteCode stri
 		CreatedAt: time.Now(),
 	}
 
-	_, err = s.usersColl.InsertOne(ctx, user)
+	err = s.userRepo.Insert(ctx, user)
 	if err != nil {
 		return err
 	}
 
 	// Marcar convite como usado
-	_, err = s.invitesColl.UpdateOne(
-		ctx,
-		bson.M{"_id": invite.ID},
-		bson.M{"$set": bson.M{"used": true}},
-	)
+	invite.Used = true
+	err = s.userRepo.UpdateInvite(ctx, invite)
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
-func (s *Service) Login(ctx context.Context, email, password string) (string, *models.User, error) {
-	user := &models.User{}
-	err := s.usersColl.FindOne(ctx, bson.M{"email": email}).Decode(user)
+func (s *UserService) Login(ctx context.Context, email string, password string) (string, *models.User, error) {
+	user, err := s.userRepo.FindByEmail(ctx, email)
 	if err != nil {
 		return "", nil, errors.New("usuário não encontrado")
 	}

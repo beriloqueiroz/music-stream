@@ -12,8 +12,9 @@ import (
 	"testing"
 	"time"
 
-	rest_server "github.com/beriloqueiroz/music-stream/cmd/server/rest"
 	"github.com/beriloqueiroz/music-stream/internal/helper"
+	"github.com/beriloqueiroz/music-stream/internal/infra/mongodb"
+	rest_server "github.com/beriloqueiroz/music-stream/internal/infra/rest"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"go.mongodb.org/mongo-driver/bson"
@@ -54,7 +55,8 @@ func TestRestIntegration(t *testing.T) {
 	}
 
 	restServer := rest_server.NewRestServer(database.Database("music-stream"))
-	go restServer.Start(jwtSecret)
+	userRepo := mongodb.NewMongoUserRepository(database.Database("music-stream"))
+	go restServer.Start(jwtSecret, userRepo)
 
 	time.Sleep(1 * time.Second)
 

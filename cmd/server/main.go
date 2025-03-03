@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	rest_server "github.com/beriloqueiroz/music-stream/cmd/server/rest"
 	"github.com/beriloqueiroz/music-stream/internal/application"
 	grpc_server "github.com/beriloqueiroz/music-stream/internal/infra/grpc"
 	"github.com/beriloqueiroz/music-stream/internal/infra/mongodb"
+	rest_server "github.com/beriloqueiroz/music-stream/internal/infra/rest"
 	"github.com/beriloqueiroz/music-stream/pkg/storage"
 	"github.com/beriloqueiroz/music-stream/pkg/storage/s3"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -74,6 +74,7 @@ func main() {
 	}
 
 	musicRepo := mongodb.NewMongoMusicRepository(db)
+	userRepo := mongodb.NewMongoUserRepository(db)
 
 	// Configurar S3 (exemplo)
 	storage := getStorage()
@@ -83,7 +84,7 @@ func main() {
 	go grpcServer.Start()
 
 	RestServer := rest_server.NewRestServer(db)
-	RestServer.Start(jwtSecret)
+	RestServer.Start(jwtSecret, userRepo)
 }
 
 func connectMongoDB(ctx context.Context) (*mongo.Client, string, error) {
