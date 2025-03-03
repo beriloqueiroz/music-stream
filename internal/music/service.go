@@ -12,19 +12,16 @@ import (
 	"github.com/beriloqueiroz/music-stream/pkg/models"
 	"github.com/beriloqueiroz/music-stream/pkg/storage"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Service struct {
 	pb.UnimplementedMusicServiceServer
-	db        *mongo.Database
 	storage   storage.MusicStorage
 	musicRepo application.MusicRepository
 }
 
-func NewMusicService(db *mongo.Database, storage storage.MusicStorage, musicRepo application.MusicRepository) *Service {
+func NewMusicService(storage storage.MusicStorage, musicRepo application.MusicRepository) *Service {
 	return &Service{
-		db:        db,
 		storage:   storage,
 		musicRepo: musicRepo,
 	}

@@ -77,7 +77,7 @@ func main() {
 
 	// Configurar S3 (exemplo)
 	storage := getStorage()
-	musicService := music.NewMusicService(db, storage, musicRepo)
+	musicService := music.NewMusicService(storage, musicRepo)
 
 	grpcServer := grpc_server.NewGrpcServer(musicService, db)
 	go grpcServer.Start()
