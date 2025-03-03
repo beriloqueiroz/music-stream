@@ -1,4 +1,4 @@
-package music
+package application
 
 import (
 	"bytes"
@@ -8,26 +8,25 @@ import (
 	"time"
 
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
-	"github.com/beriloqueiroz/music-stream/internal/application"
 	"github.com/beriloqueiroz/music-stream/pkg/models"
 	"github.com/beriloqueiroz/music-stream/pkg/storage"
 	"github.com/google/uuid"
 )
 
-type Service struct {
+type MusicService struct {
 	pb.UnimplementedMusicServiceServer
 	storage   storage.MusicStorage
-	musicRepo application.MusicRepository
+	musicRepo MusicRepository
 }
 
-func NewMusicService(storage storage.MusicStorage, musicRepo application.MusicRepository) *Service {
-	return &Service{
+func NewMusicService(storage storage.MusicStorage, musicRepo MusicRepository) *MusicService {
+	return &MusicService{
 		storage:   storage,
 		musicRepo: musicRepo,
 	}
 }
 
-func (s *Service) GetMusic(ctx context.Context, id string) (*models.Music, error) {
+func (s *MusicService) GetMusic(ctx context.Context, id string) (*models.Music, error) {
 	music, err := s.musicRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -36,7 +35,7 @@ func (s *Service) GetMusic(ctx context.Context, id string) (*models.Music, error
 	return music, nil
 }
 
-func (s *Service) StreamMusic(req *pb.StreamRequest, stream pb.MusicService_StreamMusicServer) error {
+func (s *MusicService) StreamMusic(req *pb.StreamRequest, stream pb.MusicService_StreamMusicServer) error {
 	ctx := stream.Context()
 	music, err := s.GetMusic(ctx, req.MusicId)
 	if err != nil {
@@ -75,7 +74,7 @@ func (s *Service) StreamMusic(req *pb.StreamRequest, stream pb.MusicService_Stre
 	return nil
 }
 
-func (s *Service) UploadMusic(stream pb.MusicService_UploadMusicServer) error {
+func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) error {
 	var metadata *pb.MusicMetadata
 
 	// Buffer para acumular os chunks
@@ -139,7 +138,7 @@ func (s *Service) UploadMusic(stream pb.MusicService_UploadMusicServer) error {
 	})
 }
 
-func (s *Service) SearchMusic(ctx context.Context, in *pb.SearchRequest) (*pb.SearchResponse, error) {
+func (s *MusicService) SearchMusic(ctx context.Context, in *pb.SearchRequest) (*pb.SearchResponse, error) {
 	query := in.Query
 	page := in.Page
 	limit := in.PageSize

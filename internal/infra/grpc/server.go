@@ -5,25 +5,22 @@ import (
 	"net"
 
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
-	"github.com/beriloqueiroz/music-stream/internal/music"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/beriloqueiroz/music-stream/internal/application"
 	"google.golang.org/grpc"
 )
 
 type GrpcServer struct {
 	grpcServer   *grpc.Server
-	musicService *music.Service
-	db           *mongo.Database
+	musicService *application.MusicService
 }
 
-func NewGrpcServer(musicService *music.Service, db *mongo.Database) *GrpcServer {
+func NewGrpcServer(musicService *application.MusicService) *GrpcServer {
 	grpcServer := grpc.NewServer()
 	pb.RegisterMusicServiceServer(grpcServer, musicService)
 
 	return &GrpcServer{
 		grpcServer:   grpcServer,
 		musicService: musicService,
-		db:           db,
 	}
 }
 
