@@ -8,6 +8,7 @@ import (
 	"time"
 
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
+	"github.com/beriloqueiroz/music-stream/internal/helper"
 	"github.com/beriloqueiroz/music-stream/pkg/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -135,4 +136,6 @@ func main() {
 	}
 
 	log.Printf("Música inserida/atualizada com ID: %s", music.ID.Hex())
+
+	log.Println(helper.GenerateHash("12365478"))
 }

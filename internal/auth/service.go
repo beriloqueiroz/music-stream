@@ -92,15 +92,15 @@ func (s *Service) Register(ctx context.Context, email, password, inviteCode stri
 	return err
 }
 
-func (s *Service) Login(ctx context.Context, email, password string) (string, error) {
+func (s *Service) Login(ctx context.Context, email, password string) (string, *models.User, error) {
 	user := &models.User{}
 	err := s.usersColl.FindOne(ctx, bson.M{"email": email}).Decode(user)
 	if err != nil {
-		return "", errors.New("usuário não encontrado")
+		return "", nil, errors.New("usuário não encontrado")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", errors.New("senha incorreta")
+		return "", nil, errors.New("senha incorreta")
 	}
 
 	// Gerar JWT
@@ -113,8 +113,8 @@ func (s *Service) Login(ctx context.Context, email, password string) (string, er
 
 	tokenString, err := token.SignedString(s.jwtSecret)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
-	return tokenString, nil
+	return tokenString, user, nil
 }
