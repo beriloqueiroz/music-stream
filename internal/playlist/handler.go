@@ -14,31 +14,25 @@ func NewHandler(service *Service) *Handler {
 }
 
 type createPlaylistRequest struct {
-	Name    string `json:"name"`
-	OwnerID string `json:"owner_id"`
+	Name string `json:"name"`
 }
 
 type addMusicInPlaylistRequest struct {
 	MusicID string `json:"music_id"`
-	OwnerID string `json:"owner_id"`
 }
 
 type removeMusicInPlaylistRequest struct {
 	MusicID string `json:"music_id"`
-	OwnerID string `json:"owner_id"`
 }
 
 type updatePlaylistRequest struct {
-	Name    string `json:"name"`
-	OwnerID string `json:"owner_id"`
+	Name string `json:"name"`
 }
 
 type deletePlaylistRequest struct {
-	OwnerID string `json:"owner_id"`
 }
 
 type getPlaylistRequest struct {
-	OwnerID string `json:"owner_id"`
 }
 
 func (h *Handler) CreatePlaylist(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +41,12 @@ func (h *Handler) CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	playlist, err := h.service.CreatePlaylist(r.Context(), req.Name, req.OwnerID)
+	ownerID := r.Header.Get("owner_id")
+	if ownerID == "" {
+		http.Error(w, "Owner ID is required", http.StatusBadRequest)
+		return
+	}
+	playlist, err := h.service.CreatePlaylist(r.Context(), req.Name, ownerID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -64,7 +63,12 @@ func (h *Handler) AddMusicInPlaylist(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err := h.service.AddMusicToPlaylist(r.Context(), playlistID, req.MusicID, req.OwnerID)
+	ownerID := r.Header.Get("owner_id")
+	if ownerID == "" {
+		http.Error(w, "Owner ID is required", http.StatusBadRequest)
+		return
+	}
+	err := h.service.AddMusicToPlaylist(r.Context(), playlistID, req.MusicID, ownerID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -82,7 +86,12 @@ func (h *Handler) RemoveMusicInPlaylist(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err := h.service.RemoveMusicFromPlaylist(r.Context(), playlistID, musicID, req.OwnerID)
+	ownerID := r.Header.Get("owner_id")
+	if ownerID == "" {
+		http.Error(w, "Owner ID is required", http.StatusBadRequest)
+		return
+	}
+	err := h.service.RemoveMusicFromPlaylist(r.Context(), playlistID, musicID, ownerID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -98,7 +107,12 @@ func (h *Handler) UpdatePlaylist(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	playlist, err := h.service.UpdatePlaylist(r.Context(), playlistID, req.Name, req.OwnerID)
+	ownerID := r.Header.Get("owner_id")
+	if ownerID == "" {
+		http.Error(w, "Owner ID is required", http.StatusBadRequest)
+		return
+	}
+	playlist, err := h.service.UpdatePlaylist(r.Context(), playlistID, req.Name, ownerID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -114,7 +128,12 @@ func (h *Handler) DeletePlaylist(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err := h.service.DeletePlaylist(r.Context(), playlistID, req.OwnerID)
+	ownerID := r.Header.Get("owner_id")
+	if ownerID == "" {
+		http.Error(w, "Owner ID is required", http.StatusBadRequest)
+		return
+	}
+	err := h.service.DeletePlaylist(r.Context(), playlistID, ownerID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -135,7 +154,12 @@ func (h *Handler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	playlist, err := h.service.GetPlaylist(r.Context(), playlistID, req.OwnerID)
+	ownerID := r.Header.Get("owner_id")
+	if ownerID == "" {
+		http.Error(w, "Owner ID is required", http.StatusBadRequest)
+		return
+	}
+	playlist, err := h.service.GetPlaylist(r.Context(), playlistID, ownerID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -150,7 +174,12 @@ func (h *Handler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	playlists, err := h.service.GetPlaylists(r.Context(), req.OwnerID)
+	ownerID := r.Header.Get("owner_id")
+	if ownerID == "" {
+		http.Error(w, "Owner ID is required", http.StatusBadRequest)
+		return
+	}
+	playlists, err := h.service.GetPlaylists(r.Context(), ownerID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

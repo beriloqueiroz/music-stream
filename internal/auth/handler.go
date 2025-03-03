@@ -66,16 +66,14 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateInvite(w http.ResponseWriter, r *http.Request) {
-	// Verificar se o usuário é admin
 	// TODO: Implementar middleware de autenticação
-
 	var req createInviteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	invite, err := h.service.CreateInvite(r.Context(), req.Email)
+	invite, err := h.service.CreateInvite(r.Context(), req.Email, r.Header.Get("user_id"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

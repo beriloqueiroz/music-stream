@@ -27,8 +27,7 @@ func (s *RestServer) Start(jwtSecret string) {
 	// Rotas de autenticação
 	mux.HandleFunc("POST /api/auth/register", authHandler.Register)
 	mux.HandleFunc("POST /api/auth/login", authHandler.Login)
-	mux.HandleFunc("POST /api/invites", authHandler.CreateInvite)
-
+	mux.Handle("POST /api/invites", authService.AuthMiddleware(http.HandlerFunc(authHandler.CreateInvite)))
 	// Rotas de playlists
 	playlistService := playlist.NewPlaylistService(s.db)
 	playlistHandler := playlist.NewHandler(playlistService)

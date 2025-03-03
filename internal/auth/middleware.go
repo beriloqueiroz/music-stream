@@ -41,13 +41,8 @@ func (s *Service) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Verificar se o usuário é admin
-		isAdmin, ok := claims["is_admin"].(bool)
-		if !ok || !isAdmin {
-			http.Error(w, "acesso não autorizado", http.StatusForbidden)
-			return
-		}
-
+		r.Header.Set("owner_id", claims["user_id"].(string))
+		r.Header.Set("user_id", claims["user_id"].(string))
 		ctx := context.WithValue(r.Context(), userIDKey, claims["user_id"])
 		ctx = context.WithValue(ctx, emailKey, claims["email"])
 		ctx = context.WithValue(ctx, isAdminKey, claims["is_admin"])

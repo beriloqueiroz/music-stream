@@ -29,7 +29,19 @@ func NewAuthService(db *mongo.Database, jwtSecret string) *Service {
 	}
 }
 
-func (s *Service) CreateInvite(ctx context.Context, email string) (*models.Invite, error) {
+func (s *Service) CreateInvite(ctx context.Context, email string, whoIsInvitingId string) (*models.Invite, error) {
+	whoIsInviting := &models.User{}
+	primitiveWhoIsInvitingId, err := primitive.ObjectIDFromHex(whoIsInvitingId)
+	if err != nil {
+		return nil, errors.New("usuário não encontrado")
+	}
+	err = s.usersColl.FindOne(ctx, bson.M{"_id": primitiveWhoIsInvitingId}).Decode(whoIsInviting)
+	if err != nil {
+		return nil, errors.New("usuário não encontrado")
+	}
+	if !whoIsInviting.IsAdmin {
+		return nil, errors.New("usuário tem permissão insuficiente para criar convite")
+	}
 	code := generateRandomCode() // Implementar função para gerar código aleatório
 	invite := &models.Invite{
 		ID:        primitive.NewObjectID(),
@@ -40,7 +52,7 @@ func (s *Service) CreateInvite(ctx context.Context, email string) (*models.Invit
 		CreatedAt: time.Now(),
 	}
 
-	_, err := s.invitesColl.InsertOne(ctx, invite)
+	_, err = s.invitesColl.InsertOne(ctx, invite)
 	if err != nil {
 		return nil, err
 	}

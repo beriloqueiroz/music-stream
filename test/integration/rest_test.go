@@ -63,8 +63,8 @@ func TestRestIntegration(t *testing.T) {
 	createAdminUser(database.Database("music-stream"))
 
 	// integration tests
-
 	token := ""
+	userID := ""
 	t.Run("TestLogin", func(t *testing.T) {
 		// test login
 		url := "http://localhost:8080/api/auth/login"
@@ -99,7 +99,7 @@ func TestRestIntegration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.NotNil(t, response["token"])
 		token = response["token"].(string)
-
+		userID = response["id"].(string)
 	})
 
 	inviteCode := ""
@@ -192,8 +192,6 @@ func TestRestIntegration(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 	})
 
-	userID := ""
-
 	t.Run("LoginWithNewUserInvited", func(t *testing.T) {
 		// test login with new user invited
 		url := "http://localhost:8080/api/auth/login"
@@ -229,6 +227,7 @@ func TestRestIntegration(t *testing.T) {
 		assert.NotNil(t, response["token"])
 		assert.NotNil(t, response["id"])
 		userID = response["id"].(string)
+		token = response["token"].(string)
 	})
 
 	playlistID := ""
@@ -238,8 +237,7 @@ func TestRestIntegration(t *testing.T) {
 		// test create playlist
 		url := "http://localhost:8080/api/playlists"
 		payload := map[string]interface{}{
-			"name":     "testplaylist",
-			"owner_id": ownerID,
+			"name": "testplaylist",
 		}
 		jsonPayload, err := json.Marshal(payload)
 		if err != nil {
