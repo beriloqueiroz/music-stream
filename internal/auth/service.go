@@ -44,7 +44,7 @@ func (s *Service) CreateInvite(ctx context.Context, email string, whoIsInvitingI
 	}
 	code := generateRandomCode() // Implementar função para gerar código aleatório
 	invite := &models.Invite{
-		ID:        primitive.NewObjectID(),
+		ID:        primitive.NewObjectID().Hex(),
 		Code:      code,
 		Email:     email,
 		Used:      false,
@@ -82,7 +82,7 @@ func (s *Service) Register(ctx context.Context, email, password, inviteCode stri
 
 	// Criar usuário
 	user := &models.User{
-		ID:        primitive.NewObjectID(),
+		ID:        primitive.NewObjectID().Hex(),
 		Email:     email,
 		Password:  string(hashedPassword),
 		IsAdmin:   false,
@@ -117,7 +117,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (string, *m
 
 	// Gerar JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  user.ID.Hex(),
+		"user_id":  user.ID,
 		"email":    user.Email,
 		"is_admin": user.IsAdmin,
 		"exp":      time.Now().Add(24 * time.Hour).Unix(),

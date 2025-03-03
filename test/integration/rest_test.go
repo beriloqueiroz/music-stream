@@ -14,7 +14,6 @@ import (
 
 	rest_server "github.com/beriloqueiroz/music-stream/cmd/server/rest"
 	"github.com/beriloqueiroz/music-stream/internal/helper"
-	"github.com/beriloqueiroz/music-stream/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"go.mongodb.org/mongo-driver/bson"
@@ -495,19 +494,4 @@ func createAdminUser(db *mongo.Database) {
 		"is_admin":   true,
 		"created_at": time.Now(),
 	})
-}
-
-func PrintAllPlaylists(db *mongo.Database) {
-	playlists, err := db.Collection("playlists").Find(context.Background(), bson.M{})
-	if err != nil {
-		log.Fatal(err)
-	}
-	for playlists.Next(context.Background()) {
-		var playlist models.Playlist
-		err = playlists.Decode(&playlist)
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println(playlist)
-	}
 }

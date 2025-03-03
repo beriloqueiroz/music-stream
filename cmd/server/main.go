@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	grpc_server "github.com/beriloqueiroz/music-stream/cmd/server/grpc"
 	rest_server "github.com/beriloqueiroz/music-stream/cmd/server/rest"
+	"github.com/beriloqueiroz/music-stream/internal/infra/mongodb"
 	"github.com/beriloqueiroz/music-stream/internal/music"
 	"github.com/beriloqueiroz/music-stream/pkg/storage"
 	"github.com/beriloqueiroz/music-stream/pkg/storage/s3"
@@ -54,6 +55,38 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	client, dbName, err := connectMongoDB(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Disconnect(ctx)
+	// Ping no MongoDB para verificar conexão
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	db := client.Database(dbName)
+
+	// Configuração do serviço de autenticação
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "bb#123$joao"
+	}
+
+	musicRepo := mongodb.NewMongoMusicRepository(db)
+
+	// Configurar S3 (exemplo)
+	storage := getStorage()
+	musicService := music.NewMusicService(db, storage, musicRepo)
+
+	grpcServer := grpc_server.NewGrpcServer(musicService, db)
+	go grpcServer.Start()
+
+	RestServer := rest_server.NewRestServer(db)
+	RestServer.Start(jwtSecret)
+}
+
+func connectMongoDB(ctx context.Context) (*mongo.Client, string, error) {
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
 		mongoURI = "mongodb://localhost:27017"
@@ -68,29 +101,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer client.Disconnect(ctx)
 
-	// Ping no MongoDB para verificar conexão
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	db := client.Database(dbName)
-
-	// Configuração do serviço de autenticação
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "bb#123$joao"
-	}
-
-	// Configurar S3 (exemplo)
-	storage := getStorage()
-	musicService := music.NewMusicService(db, storage)
-
-	grpcServer := grpc_server.NewGrpcServer(musicService, db)
-	go grpcServer.Start()
-
-	RestServer := rest_server.NewRestServer(db)
-	RestServer.Start(jwtSecret)
+	return client, dbName, nil
 }

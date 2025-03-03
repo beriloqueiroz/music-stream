@@ -11,7 +11,6 @@ import (
 	"github.com/beriloqueiroz/music-stream/internal/helper"
 	"github.com/beriloqueiroz/music-stream/pkg/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
@@ -92,13 +91,8 @@ func main() {
 	db := client.Database("musicstream")
 	coll := db.Collection("musics")
 
-	musicID, err := primitive.ObjectIDFromHex(response.MusicId)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	music := models.Music{
-		ID:        musicID,
+		ID:        response.MusicId,
 		Title:     "Yesterday",
 		Artist:    "The Beatles",
 		Album:     "Help!",
@@ -127,7 +121,7 @@ func main() {
 	}
 
 	opts := options.Update().SetUpsert(true)
-	filter := bson.M{"_id": musicID}
+	filter := bson.M{"_id": music.ID}
 	update := bson.M{"$set": music}
 
 	_, err = coll.UpdateOne(context.Background(), filter, update, opts)
@@ -135,7 +129,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("Música inserida/atualizada com ID: %s", music.ID.Hex())
+	log.Printf("Música inserida/atualizada com ID: %s", music.ID)
 
 	log.Println(helper.GenerateHash("12365478"))
 }

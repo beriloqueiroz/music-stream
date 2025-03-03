@@ -8,37 +8,30 @@ import (
 	"time"
 
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
+	"github.com/beriloqueiroz/music-stream/internal/application"
 	"github.com/beriloqueiroz/music-stream/pkg/models"
 	"github.com/beriloqueiroz/music-stream/pkg/storage"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Service struct {
 	pb.UnimplementedMusicServiceServer
-	db         *mongo.Database
-	musicsColl *mongo.Collection
-	storage    storage.MusicStorage
+	db        *mongo.Database
+	storage   storage.MusicStorage
+	musicRepo application.MusicRepository
 }
 
-func NewMusicService(db *mongo.Database, storage storage.MusicStorage) *Service {
+func NewMusicService(db *mongo.Database, storage storage.MusicStorage, musicRepo application.MusicRepository) *Service {
 	return &Service{
-		db:         db,
-		musicsColl: db.Collection("musics"),
-		storage:    storage,
+		db:        db,
+		storage:   storage,
+		musicRepo: musicRepo,
 	}
 }
 
 func (s *Service) GetMusic(ctx context.Context, id string) (*models.Music, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, err
-	}
-
-	music := &models.Music{}
-	err = s.musicsColl.FindOne(ctx, bson.M{"_id": objectID}).Decode(music)
+	music, err := s.musicRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +40,13 @@ func (s *Service) GetMusic(ctx context.Context, id string) (*models.Music, error
 }
 
 func (s *Service) StreamMusic(req *pb.StreamRequest, stream pb.MusicService_StreamMusicServer) error {
-	reader, err := s.storage.GetMusic(req.MusicId)
+	ctx := stream.Context()
+	music, err := s.GetMusic(ctx, req.MusicId)
+	if err != nil {
+		return err
+	}
+	storageID := music.StorageID
+	reader, err := s.storage.GetMusic(storageID)
 	if err != nil {
 		return err
 	}
@@ -82,10 +81,6 @@ func (s *Service) StreamMusic(req *pb.StreamRequest, stream pb.MusicService_Stre
 func (s *Service) UploadMusic(stream pb.MusicService_UploadMusicServer) error {
 	var metadata *pb.MusicMetadata
 
-	// Gerar um único ID para usar em ambos os lugares
-	id := primitive.NewObjectID()
-	storageID := id.Hex()
-
 	// Buffer para acumular os chunks
 	var buffer bytes.Buffer
 
@@ -115,32 +110,33 @@ func (s *Service) UploadMusic(stream pb.MusicService_UploadMusicServer) error {
 		return errors.New("metadata não fornecida")
 	}
 
+	storageUUID := uuid.New().String()
+
 	// Salvar no storage
-	err := s.storage.SaveMusic(storageID, &buffer)
+	err := s.storage.SaveMusic(storageUUID, &buffer)
 	if err != nil {
 		return err
 	}
 
 	// Salvar no MongoDB
 	music := &models.Music{
-		ID:        id,
 		Title:     metadata.Title,
 		Artist:    metadata.Artist,
 		Album:     metadata.Album,
-		StorageID: storageID,
+		StorageID: storageUUID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
-	_, err = s.musicsColl.InsertOne(stream.Context(), music)
+	id, err := s.musicRepo.Create(stream.Context(), music)
 	if err != nil {
 		// Se falhar, tenta remover do storage
-		_ = s.storage.DeleteMusic(storageID)
+		_ = s.storage.DeleteMusic(storageUUID)
 		return err
 	}
 
 	return stream.SendAndClose(&pb.UploadResponse{
-		MusicId: storageID,
+		MusicId: id,
 		Success: true,
 		Message: "Música enviada com sucesso",
 	})
@@ -151,20 +147,19 @@ func (s *Service) SearchMusic(ctx context.Context, in *pb.SearchRequest) (*pb.Se
 	page := in.Page
 	limit := in.PageSize
 
-	musics, err := s.musicsColl.Find(ctx, bson.M{
-		"$text": bson.M{"$search": query},
-	}, options.Find().SetSkip(int64(page*limit)).SetLimit(int64(limit)))
+	musics, err := s.musicRepo.Search(ctx, query, int(page), int(limit))
 	if err != nil {
 		return nil, err
 	}
 
 	var musicsList []*pb.Music
-	for musics.Next(ctx) {
-		var music = &pb.Music{}
-		if err := musics.Decode(&music); err != nil {
-			return nil, err
-		}
-		musicsList = append(musicsList, music)
+	for _, music := range musics.MusicList {
+		musicsList = append(musicsList, &pb.Music{
+			Id:     music.ID,
+			Title:  music.Title,
+			Artist: music.Artist,
+			Album:  music.Album,
+		})
 	}
 
 	return &pb.SearchResponse{
