@@ -1,5 +1,5 @@
 # Arquivos de música
-*.mp3
+*test_data/*
 storage/music/*
 docker/*
 !storage/music/.gitkeep

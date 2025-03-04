@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -17,10 +16,8 @@ import (
 	rest_server "github.com/beriloqueiroz/music-stream/internal/infra/rest"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/testcontainers/testcontainers-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // auth rest api integration test
@@ -35,14 +32,16 @@ func TestRestIntegration(t *testing.T) {
 
 	ctx := context.Background()
 
-	container, err := StartMongoDBContainer(ctx)
+	testHelper := NewTestHelper()
+
+	container, err := testHelper.StartMongoDBContainer(ctx)
 	if err != nil {
 		log.Fatalf("Erro ao iniciar container: %v", err)
 		os.Exit(1)
 	}
 	defer container.Terminate(ctx)
 
-	database, err := ConnectToMongoDB(ctx, container)
+	database, err := testHelper.ConnectToMongoDB(ctx, container)
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao MongoDB: %v", err)
 		os.Exit(1)
@@ -491,59 +490,6 @@ func TestRestIntegration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	})
 
-}
-
-func StartMongoDBContainer(ctx context.Context) (testcontainers.Container, error) {
-
-	containerRequest := testcontainers.ContainerRequest{
-		Image:        "mongo:latest",
-		Name:         "music-stream-test",
-		ExposedPorts: []string{"27018:27018"},
-		Env: map[string]string{
-			"MONGO_INITDB_ROOT_USERNAME": "root",
-			"MONGO_INITDB_ROOT_PASSWORD": "root",
-			"MONGO_INITDB_DATABASE":      "music-stream",
-		},
-		Cmd: []string{"mongod", "--auth", "--port", "27018"},
-	}
-
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: containerRequest,
-		Started:          true,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	log.Println("Container MongoDB iniciado com sucesso")
-
-	return container, nil
-}
-
-func ConnectToMongoDB(ctx context.Context, container testcontainers.Container) (*mongo.Client, error) {
-	mappedPort, err := container.MappedPort(ctx, "27018")
-
-	if err != nil {
-		log.Fatalf("Erro ao obter porta mapeada: %v", err)
-		os.Exit(1)
-	}
-
-	dbURL := fmt.Sprintf("mongodb://root:root@localhost:%s/music-stream?authSource=admin", mappedPort.Port())
-
-	db, err := mongo.Connect(ctx, options.Client().ApplyURI(dbURL))
-	if err != nil {
-		log.Fatalf("Erro ao conectar ao MongoDB: %v", err)
-		os.Exit(1)
-	}
-
-	err = db.Ping(ctx, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println("MongoDB conectado com sucesso")
-
-	return db, nil
 }
 
 func createAdminUser(db *mongo.Database) {
