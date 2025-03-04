@@ -10,7 +10,7 @@ import (
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
 	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"github.com/beriloqueiroz/music-stream/pkg/storage"
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type MusicService struct {
@@ -41,8 +41,7 @@ func (s *MusicService) StreamMusic(req *pb.StreamRequest, stream pb.MusicService
 	if err != nil {
 		return err
 	}
-	storageID := music.StorageID
-	reader, err := s.storage.GetMusic(storageID)
+	reader, err := s.storage.GetMusic(music.StorageID.String())
 	if err != nil {
 		return err
 	}
@@ -106,16 +105,19 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 		return errors.New("metadata não fornecida")
 	}
 
-	storageUUID := uuid.New().String()
+	storageUUID := primitive.NewObjectID()
 
 	// Salvar no storage
-	err := s.storage.SaveMusic(storageUUID, &buffer)
+	err := s.storage.SaveMusic(storageUUID.String(), &buffer)
 	if err != nil {
 		return err
 	}
 
+	musicID := primitive.NewObjectID()
+
 	// Salvar no MongoDB
 	music := &domain.Music{
+		ID:        musicID,
 		Title:     metadata.Title,
 		Artist:    metadata.Artist,
 		Album:     metadata.Album,
@@ -127,7 +129,7 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 	id, err := s.musicRepo.Create(stream.Context(), music)
 	if err != nil {
 		// Se falhar, tenta remover do storage
-		_ = s.storage.DeleteMusic(storageUUID)
+		_ = s.storage.DeleteMusic(storageUUID.String())
 		return err
 	}
 
@@ -151,7 +153,7 @@ func (s *MusicService) SearchMusic(ctx context.Context, in *pb.SearchRequest) (*
 	var musicsList []*pb.Music
 	for _, music := range musics.MusicList {
 		musicsList = append(musicsList, &pb.Music{
-			Id:     music.ID,
+			Id:     music.ID.Hex(),
 			Title:  music.Title,
 			Artist: music.Artist,
 			Album:  music.Album,

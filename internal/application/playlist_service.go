@@ -3,10 +3,12 @@ package application
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"github.com/beriloqueiroz/music-stream/internal/helper"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type PlaylistService struct {
@@ -24,20 +26,31 @@ func (s *PlaylistService) CreatePlaylist(ctx context.Context, name string, owner
 	if name == "" || ownerID == "" {
 		return nil, errors.New("name and ownerID are required")
 	}
+
+	primitiveOwnerID, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return nil, err
+	}
+
 	playlist := &domain.Playlist{
+		ID:        primitive.NewObjectID(),
 		Name:      name,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Musics:    []domain.PlaylistMusic{},
-		OwnerID:   ownerID,
+		OwnerID:   primitiveOwnerID,
 	}
 	id, err := s.playlistRepo.Create(ctx, playlist)
-
-	playlist.ID = id
 
 	if err != nil {
 		return nil, err
 	}
+
+	if playlist.ID.Hex() != id {
+		log.Println("failed to create playlist")
+		return nil, errors.New("failed to create playlist")
+	}
+
 	return playlist, nil
 }
 
@@ -85,13 +98,20 @@ func (s *PlaylistService) AddMusicToPlaylist(ctx context.Context, playlistID str
 	}
 	// verify if music already exists in playlist
 	for _, music := range playlist.Musics {
-		if music.MusicID == musicID {
+		if music.MusicID.Hex() == musicID {
 			return errors.New("music already exists in playlist")
 		}
 	}
+
+	// todo find with musicRepo the music by id
+	primitiveMusicID, err := primitive.ObjectIDFromHex(musicID)
+	if err != nil {
+		return err
+	}
+
 	playlist.Musics = append(playlist.Musics, domain.PlaylistMusic{
-		PlaylistID: playlistID,
-		MusicID:    musicID,
+		PlaylistID: playlist.ID,
+		MusicID:    primitiveMusicID,
 		CreatedAt:  time.Now(),
 	})
 	err = s.playlistRepo.Update(ctx, playlist)
@@ -110,7 +130,7 @@ func (s *PlaylistService) RemoveMusicFromPlaylist(ctx context.Context, playlistI
 		return err
 	}
 	playlist.Musics = helper.RemoveFromSlice(playlist.Musics, func(music domain.PlaylistMusic) bool {
-		return music.MusicID == musicID
+		return music.MusicID.Hex() == musicID
 	})
 	err = s.playlistRepo.Update(ctx, playlist)
 	if err != nil {

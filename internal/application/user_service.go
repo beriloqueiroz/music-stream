@@ -34,6 +34,7 @@ func (s *UserService) CreateInvite(ctx context.Context, email string, whoIsInvit
 	}
 	code := helper.GenerateRandomCode() // Implementar função para gerar código aleatório
 	invite := &domain.Invite{
+		ID:        primitive.NewObjectID(),
 		Code:      code,
 		Email:     email,
 		Used:      false,
@@ -67,7 +68,7 @@ func (s *UserService) Register(ctx context.Context, email, password, inviteCode 
 
 	// Criar usuário
 	user := &domain.User{
-		ID:        primitive.NewObjectID().Hex(),
+		ID:        primitive.NewObjectID(),
 		Email:     email,
 		Password:  string(hashedPassword),
 		IsAdmin:   false,
@@ -89,19 +90,19 @@ func (s *UserService) Register(ctx context.Context, email, password, inviteCode 
 	return nil
 }
 
-func (s *UserService) Login(ctx context.Context, email string, password string) (string, *domain.User, error) {
+func (s *UserService) Login(ctx context.Context, email string, password string) (*string, *domain.User, error) {
 	user, err := s.userRepo.FindByEmail(ctx, email)
 	if err != nil {
-		return "", nil, errors.New("usuário não encontrado")
+		return nil, nil, errors.New("usuário não encontrado")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", nil, errors.New("senha incorreta")
+		return nil, nil, errors.New("senha incorreta")
 	}
 
 	// Gerar JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  user.ID,
+		"user_id":  user.ID.Hex(),
 		"email":    user.Email,
 		"is_admin": user.IsAdmin,
 		"exp":      time.Now().Add(24 * time.Hour).Unix(),
@@ -109,8 +110,8 @@ func (s *UserService) Login(ctx context.Context, email string, password string) 
 
 	tokenString, err := token.SignedString(s.jwtSecret)
 	if err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
 
-	return tokenString, user, nil
+	return &tokenString, user, nil
 }

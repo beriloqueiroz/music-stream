@@ -20,9 +20,7 @@ func NewMongoPlaylistRepository(db *mongo.Database) *MongoPlaylistRepository {
 }
 
 func (r *MongoPlaylistRepository) Create(ctx context.Context, playlist *domain.Playlist) (string, error) {
-	mongoPlaylist := &MongoPlaylist{}
-	mongoPlaylist.ByModel(playlist)
-	result, err := r.playlistsColl.InsertOne(ctx, mongoPlaylist)
+	result, err := r.playlistsColl.InsertOne(ctx, playlist)
 	if err != nil {
 		return "", err
 	}
@@ -30,7 +28,7 @@ func (r *MongoPlaylistRepository) Create(ctx context.Context, playlist *domain.P
 }
 
 func (r *MongoPlaylistRepository) FindByID(ctx context.Context, id string, ownerID string) (*domain.Playlist, error) {
-	playlist := &MongoPlaylist{}
+	playlist := &domain.Playlist{}
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
@@ -43,11 +41,11 @@ func (r *MongoPlaylistRepository) FindByID(ctx context.Context, id string, owner
 	if err != nil {
 		return nil, err
 	}
-	return playlist.ToModel(), nil
+	return playlist, nil
 }
 
 func (r *MongoPlaylistRepository) List(ctx context.Context, ownerID string, page int, limit int) ([]*domain.Playlist, error) {
-	playlists := []*MongoPlaylist{}
+	playlists := []*domain.Playlist{}
 	ownerIDPrimitive, err := primitive.ObjectIDFromHex(ownerID)
 	if err != nil {
 		return nil, err
@@ -57,24 +55,18 @@ func (r *MongoPlaylistRepository) List(ctx context.Context, ownerID string, page
 		return nil, err
 	}
 	for cursor.Next(ctx) {
-		playlist := &MongoPlaylist{}
+		playlist := &domain.Playlist{}
 		err = cursor.Decode(playlist)
 		if err != nil {
 			return nil, err
 		}
 		playlists = append(playlists, playlist)
 	}
-	playlistsModels := make([]*domain.Playlist, len(playlists))
-	for i, playlist := range playlists {
-		playlistsModels[i] = playlist.ToModel()
-	}
-	return playlistsModels, nil
+	return playlists, nil
 }
 
 func (r *MongoPlaylistRepository) Update(ctx context.Context, playlist *domain.Playlist) error {
-	mongoPlaylist := &MongoPlaylist{}
-	mongoPlaylist.ByModel(playlist)
-	_, err := r.playlistsColl.UpdateOne(ctx, bson.M{"_id": playlist.ID, "owner_id": playlist.OwnerID}, bson.M{"$set": mongoPlaylist})
+	_, err := r.playlistsColl.UpdateOne(ctx, bson.M{"_id": playlist.ID, "owner_id": playlist.OwnerID}, bson.M{"$set": playlist})
 	return err
 }
 
@@ -83,6 +75,10 @@ func (r *MongoPlaylistRepository) Delete(ctx context.Context, id string, ownerID
 	if err != nil {
 		return err
 	}
-	_, err = r.playlistsColl.DeleteOne(ctx, bson.M{"_id": idPrimitive, "owner_id": ownerID})
+	ownerIDPrimitive, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return err
+	}
+	_, err = r.playlistsColl.DeleteOne(ctx, bson.M{"_id": idPrimitive, "owner_id": ownerIDPrimitive})
 	return err
 }

@@ -21,14 +21,11 @@ func NewMongoMusicRepository(db *mongo.Database) *MongoMusicRepository {
 }
 
 func (r *MongoMusicRepository) Create(ctx context.Context, music *domain.Music) (string, error) {
-	mongoMusic := &MongoMusic{}
-	mongoMusic.ByModel(music)
-	result, err := r.musicsColl.InsertOne(ctx, mongoMusic)
+	result, err := r.musicsColl.InsertOne(ctx, music)
 	if err != nil {
 		return "", err
 	}
-	primitiveID := result.InsertedID.(primitive.ObjectID)
-	return primitiveID.Hex(), nil
+	return result.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
 func (r *MongoMusicRepository) FindByID(ctx context.Context, id string) (*domain.Music, error) {

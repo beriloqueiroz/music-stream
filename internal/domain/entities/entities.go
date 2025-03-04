@@ -2,18 +2,20 @@ package domain
 
 import (
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Music struct {
-	ID        string     `bson:"_id,omitempty" json:"id"`
-	Title     string     `bson:"title" json:"title"`
-	Artist    string     `bson:"artist" json:"artist"`
-	Album     string     `bson:"album" json:"album"`
-	StorageID string     `bson:"storage_id" json:"storage_id"`
-	CreatedAt time.Time  `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time  `bson:"updated_at" json:"updated_at"`
-	Lyrics    *Lyrics    `bson:"lyrics,omitempty" json:"lyrics,omitempty"`
-	Tablature *Tablature `bson:"tablature,omitempty" json:"tablature,omitempty"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Title     string             `bson:"title" json:"title"`
+	Artist    string             `bson:"artist" json:"artist"`
+	Album     string             `bson:"album" json:"album"`
+	StorageID primitive.ObjectID `bson:"storage_id" json:"storage_id"`
+	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
+	Lyrics    *Lyrics            `bson:"lyrics,omitempty" json:"lyrics,omitempty"`
+	Tablature *Tablature         `bson:"tablature,omitempty" json:"tablature,omitempty"`
 }
 
 type Lyrics struct {
@@ -35,34 +37,34 @@ type Segment struct {
 }
 
 type User struct {
-	ID        string    `bson:"_id,omitempty" json:"id"`
-	Email     string    `bson:"email" json:"email"`
-	Password  string    `bson:"password" json:"-"`
-	IsAdmin   bool      `bson:"is_admin" json:"is_admin"`
-	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Email     string             `bson:"email" json:"email"`
+	Password  string             `bson:"password" json:"-"`
+	IsAdmin   bool               `bson:"is_admin" json:"is_admin"`
+	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 }
 
 type Invite struct {
-	ID        string    `bson:"_id,omitempty" json:"id"`
-	Code      string    `bson:"code" json:"code"`
-	Email     string    `bson:"email" json:"email"`
-	Used      bool      `bson:"used" json:"used"`
-	ExpiresAt time.Time `bson:"expires_at" json:"expires_at"`
-	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Code      string             `bson:"code" json:"code"`
+	Email     string             `bson:"email" json:"email"`
+	Used      bool               `bson:"used" json:"used"`
+	ExpiresAt time.Time          `bson:"expires_at" json:"expires_at"`
+	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 }
 
 // playlist
 type Playlist struct {
-	ID        string          `bson:"_id,omitempty" json:"id"`
-	Name      string          `bson:"name" json:"name"`
-	CreatedAt time.Time       `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time       `bson:"updated_at" json:"updated_at"`
-	Musics    []PlaylistMusic `bson:"musics" json:"musics"`
-	OwnerID   string          `bson:"owner_id" json:"owner_id"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name      string             `bson:"name" json:"name"`
+	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
+	Musics    []PlaylistMusic    `bson:"musics" json:"musics"`
+	OwnerID   primitive.ObjectID `bson:"owner_id" json:"owner_id"`
 }
 
 type PlaylistMusic struct {
-	PlaylistID string    `bson:"playlist_id" json:"playlist_id"`
-	MusicID    string    `bson:"music_id" json:"music_id"`
-	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+	PlaylistID primitive.ObjectID `bson:"playlist_id" json:"playlist_id"`
+	MusicID    primitive.ObjectID `bson:"music_id" json:"music_id"`
+	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
 }

@@ -64,7 +64,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(loginResponse{Token: token, ID: user.ID})
+	json.NewEncoder(w).Encode(loginResponse{Token: *token, ID: user.ID.Hex()})
 }
 
 func (h *UserHandler) CreateInvite(w http.ResponseWriter, r *http.Request) {

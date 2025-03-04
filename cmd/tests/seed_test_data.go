@@ -11,6 +11,7 @@ import (
 	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"github.com/beriloqueiroz/music-stream/internal/helper"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
@@ -91,12 +92,17 @@ func main() {
 	db := client.Database("musicstream")
 	coll := db.Collection("musics")
 
+	musicId, err := primitive.ObjectIDFromHex(response.MusicId)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	music := domain.Music{
-		ID:        response.MusicId,
+		ID:        musicId,
 		Title:     "Yesterday",
 		Artist:    "The Beatles",
 		Album:     "Help!",
-		StorageID: response.MusicId,
+		StorageID: musicId,
 		Lyrics: &domain.Lyrics{
 			Text: "Yesterday, all my troubles seemed so far away...",
 			Timing: []domain.Segment{

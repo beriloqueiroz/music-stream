@@ -15,6 +15,7 @@ import (
 	"github.com/beriloqueiroz/music-stream/internal/helper"
 	"github.com/beriloqueiroz/music-stream/internal/infra/mongodb"
 	rest_server "github.com/beriloqueiroz/music-stream/internal/infra/rest"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"go.mongodb.org/mongo-driver/bson"
@@ -435,6 +436,7 @@ func StartMongoDBContainer(ctx context.Context) (testcontainers.Container, error
 
 	containerRequest := testcontainers.ContainerRequest{
 		Image:        "mongo:latest",
+		Name:         "music-stream-test",
 		ExposedPorts: []string{"27018:27018"},
 		Env: map[string]string{
 			"MONGO_INITDB_ROOT_USERNAME": "root",
@@ -489,6 +491,7 @@ func createAdminUser(db *mongo.Database) {
 		log.Fatal(err)
 	}
 	db.Collection("users").InsertOne(context.Background(), bson.M{
+		"id":         uuid.New(),
 		"email":      "admin@teste.com",
 		"password":   hash,
 		"is_admin":   true,
