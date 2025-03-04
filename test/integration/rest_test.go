@@ -408,14 +408,75 @@ func TestRestIntegration(t *testing.T) {
 		// test update playlist
 		url := "http://localhost:8080/api/playlists/" + playlistID
 		payload := map[string]interface{}{
-			"name":     "testplaylist2",
-			"owner_id": ownerID,
+			"name": "testplaylist2",
 		}
 		jsonPayload, err := json.Marshal(payload)
 		if err != nil {
 			t.Fatal(err)
 		}
 		req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonPayload))
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var response map[string]interface{}
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, "testplaylist2", response["name"])
+	})
+
+	t.Run("TestGetPlaylists", func(t *testing.T) {
+		// test get playlists
+		url := "http://localhost:8080/api/playlists"
+		payload := map[string]interface{}{}
+		jsonPayload, err := json.Marshal(payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req, err := http.NewRequest("GET", url, bytes.NewBuffer(jsonPayload))
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var responseArray []map[string]interface{}
+		err = json.Unmarshal(body, &responseArray)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, 1, len(responseArray))
+		assert.Equal(t, playlistID, responseArray[0]["id"])
+	})
+
+	t.Run("TestDeletePlaylist", func(t *testing.T) {
+		// test delete playlist
+		url := "http://localhost:8080/api/playlists/" + playlistID
+		req, err := http.NewRequest("DELETE", url, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

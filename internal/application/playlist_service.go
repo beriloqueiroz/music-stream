@@ -69,8 +69,16 @@ func (s *PlaylistService) UpdatePlaylist(ctx context.Context, id string, name st
 	if id == "" || ownerID == "" {
 		return nil, errors.New("id and ownerID are required")
 	}
-	playlist := &domain.Playlist{}
-	err := s.playlistRepo.Update(ctx, playlist)
+	primitiveID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	playlist := &domain.Playlist{
+		ID:        primitiveID,
+		Name:      name,
+		UpdatedAt: time.Now(),
+	}
+	err = s.playlistRepo.Update(ctx, playlist)
 	if err != nil {
 		return nil, err
 	}

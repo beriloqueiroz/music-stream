@@ -132,10 +132,6 @@ func (h *PlaylistHandler) UpdatePlaylist(w http.ResponseWriter, r *http.Request)
 func (h *PlaylistHandler) DeletePlaylist(w http.ResponseWriter, r *http.Request) {
 	var req deletePlaylistRequest
 	playlistID := r.PathValue("id")
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 	ownerID := r.Header.Get("owner_id")
 	if ownerID == "" {
 		http.Error(w, "Owner ID is required", http.StatusBadRequest)
