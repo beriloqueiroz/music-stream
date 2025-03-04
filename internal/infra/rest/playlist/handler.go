@@ -35,6 +35,8 @@ type deletePlaylistRequest struct {
 }
 
 type getPlaylistRequest struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
 }
 
 func (h *PlaylistHandler) CreatePlaylist(w http.ResponseWriter, r *http.Request) {
@@ -61,6 +63,10 @@ func (h *PlaylistHandler) CreatePlaylist(w http.ResponseWriter, r *http.Request)
 func (h *PlaylistHandler) AddMusicInPlaylist(w http.ResponseWriter, r *http.Request) {
 	var req addMusicInPlaylistRequest
 	playlistID := r.PathValue("id")
+	if playlistID == "" {
+		http.Error(w, "Playlist ID is required", http.StatusBadRequest)
+		return
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -181,7 +187,15 @@ func (h *PlaylistHandler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Owner ID is required", http.StatusBadRequest)
 		return
 	}
-	playlists, err := h.service.GetPlaylists(r.Context(), ownerID)
+	page := 0
+	limit := 10
+	if req.Page != 0 {
+		page = req.Page
+	}
+	if req.Limit != 0 {
+		limit = req.Limit
+	}
+	playlists, err := h.service.GetPlaylists(r.Context(), ownerID, page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

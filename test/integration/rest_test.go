@@ -56,7 +56,8 @@ func TestRestIntegration(t *testing.T) {
 
 	restServer := rest_server.NewRestServer(database.Database("music-stream"))
 	userRepo := mongodb.NewMongoUserRepository(database.Database("music-stream"))
-	go restServer.Start(jwtSecret, userRepo)
+	playlistRepo := mongodb.NewMongoPlaylistRepository(database.Database("music-stream"))
+	go restServer.Start(jwtSecret, userRepo, playlistRepo)
 
 	time.Sleep(1 * time.Second)
 
@@ -280,7 +281,6 @@ func TestRestIntegration(t *testing.T) {
 		url := "http://localhost:8080/api/playlists/" + playlistID + "/musics"
 		payload := map[string]interface{}{
 			"music_id": "66d6d6d6d6d6d6d6d6d6d6d6",
-			"owner_id": ownerID,
 		}
 		jsonPayload, err := json.Marshal(payload)
 		if err != nil {
@@ -304,9 +304,7 @@ func TestRestIntegration(t *testing.T) {
 	t.Run("TestGetPlaylistAfterAddMusic", func(t *testing.T) {
 		// test get playlist after add music
 		url := "http://localhost:8080/api/playlists/" + playlistID + "/musics"
-		payload := map[string]interface{}{
-			"owner_id": ownerID,
-		}
+		payload := map[string]interface{}{}
 		jsonPayload, err := json.Marshal(payload)
 		if err != nil {
 			t.Fatal(err)

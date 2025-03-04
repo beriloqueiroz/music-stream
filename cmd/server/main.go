@@ -75,6 +75,7 @@ func main() {
 
 	musicRepo := mongodb.NewMongoMusicRepository(db)
 	userRepo := mongodb.NewMongoUserRepository(db)
+	playlistRepo := mongodb.NewMongoPlaylistRepository(db)
 
 	// Configurar S3 (exemplo)
 	storage := getStorage()
@@ -84,7 +85,7 @@ func main() {
 	go grpcServer.Start()
 
 	RestServer := rest_server.NewRestServer(db)
-	RestServer.Start(jwtSecret, userRepo)
+	RestServer.Start(jwtSecret, userRepo, playlistRepo)
 }
 
 func connectMongoDB(ctx context.Context) (*mongo.Client, string, error) {

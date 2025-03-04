@@ -62,7 +62,6 @@ type Playlist struct {
 }
 
 type PlaylistMusic struct {
-	ID         string    `bson:"_id,omitempty" json:"id"`
 	PlaylistID string    `bson:"playlist_id" json:"playlist_id"`
 	MusicID    string    `bson:"music_id" json:"music_id"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
