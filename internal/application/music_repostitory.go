@@ -3,16 +3,16 @@ package application
 import (
 	"context"
 
-	"github.com/beriloqueiroz/music-stream/pkg/models"
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 )
 
 type SearchResult struct {
-	MusicList []*models.Music
+	MusicList []*domain.Music
 	Total     int
 }
 
 type MusicRepository interface {
-	FindByID(ctx context.Context, id string) (*models.Music, error)
-	Create(ctx context.Context, music *models.Music) (string, error)
+	FindByID(ctx context.Context, id string) (*domain.Music, error)
+	Create(ctx context.Context, music *domain.Music) (string, error)
 	Search(ctx context.Context, query string, page int, limit int) (*SearchResult, error)
 }

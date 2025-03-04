@@ -8,8 +8,8 @@ import (
 	"time"
 
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"github.com/beriloqueiroz/music-stream/internal/helper"
-	"github.com/beriloqueiroz/music-stream/pkg/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -91,24 +91,24 @@ func main() {
 	db := client.Database("musicstream")
 	coll := db.Collection("musics")
 
-	music := models.Music{
+	music := domain.Music{
 		ID:        response.MusicId,
 		Title:     "Yesterday",
 		Artist:    "The Beatles",
 		Album:     "Help!",
 		StorageID: response.MusicId,
-		Lyrics: &models.Lyrics{
+		Lyrics: &domain.Lyrics{
 			Text: "Yesterday, all my troubles seemed so far away...",
-			Timing: []models.Segment{
+			Timing: []domain.Segment{
 				{Start: 0.0, End: 2.5, Content: "Yesterday,"},
 				{Start: 2.5, End: 5.0, Content: "all my troubles seemed"},
 				{Start: 5.0, End: 7.5, Content: "so far away"},
 			},
 			Language: "en",
 		},
-		Tablature: &models.Tablature{
+		Tablature: &domain.Tablature{
 			Content: "Am Dm G7 C",
-			Timing: []models.Segment{
+			Timing: []domain.Segment{
 				{Start: 0.0, End: 2.5, Content: "Am"},
 				{Start: 2.5, End: 5.0, Content: "Dm"},
 				{Start: 5.0, End: 6.0, Content: "G7"},

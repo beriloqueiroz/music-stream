@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/beriloqueiroz/music-stream/internal/application"
-	"github.com/beriloqueiroz/music-stream/pkg/models"
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,7 +20,7 @@ func NewMongoMusicRepository(db *mongo.Database) *MongoMusicRepository {
 	return &MongoMusicRepository{db: db, musicsColl: db.Collection("musics")}
 }
 
-func (r *MongoMusicRepository) Create(ctx context.Context, music *models.Music) (string, error) {
+func (r *MongoMusicRepository) Create(ctx context.Context, music *domain.Music) (string, error) {
 	mongoMusic := &MongoMusic{}
 	mongoMusic.ByModel(music)
 	result, err := r.musicsColl.InsertOne(ctx, mongoMusic)
@@ -31,13 +31,13 @@ func (r *MongoMusicRepository) Create(ctx context.Context, music *models.Music) 
 	return primitiveID.Hex(), nil
 }
 
-func (r *MongoMusicRepository) FindByID(ctx context.Context, id string) (*models.Music, error) {
+func (r *MongoMusicRepository) FindByID(ctx context.Context, id string) (*domain.Music, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
 
-	music := &models.Music{}
+	music := &domain.Music{}
 	err = r.musicsColl.FindOne(ctx, bson.M{"_id": objectID}).Decode(music)
 	if err != nil {
 		return nil, err
@@ -54,9 +54,9 @@ func (r *MongoMusicRepository) Search(ctx context.Context, query string, page in
 		return nil, err
 	}
 
-	var musicsList []*models.Music
+	var musicsList []*domain.Music
 	for musics.Next(ctx) {
-		var music = &models.Music{}
+		var music = &domain.Music{}
 		if err := musics.Decode(&music); err != nil {
 			return nil, err
 		}

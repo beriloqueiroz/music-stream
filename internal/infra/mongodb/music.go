@@ -3,7 +3,7 @@ package mongodb
 import (
 	"time"
 
-	"github.com/beriloqueiroz/music-stream/pkg/models"
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -37,8 +37,8 @@ type MongoSegment struct {
 	Content string  `bson:"content" json:"content"` // Trecho da letra/cifra
 }
 
-func (m *MongoMusic) ToModel() *models.Music {
-	return &models.Music{
+func (m *MongoMusic) ToModel() *domain.Music {
+	return &domain.Music{
 		ID:        m.ID.Hex(),
 		Title:     m.Title,
 		Artist:    m.Artist,
@@ -51,32 +51,32 @@ func (m *MongoMusic) ToModel() *models.Music {
 	}
 }
 
-func (l *MongoLyrics) ToModel() *models.Lyrics {
-	timing := make([]models.Segment, len(l.Timing))
+func (l *MongoLyrics) ToModel() *domain.Lyrics {
+	timing := make([]domain.Segment, len(l.Timing))
 	for i, s := range l.Timing {
 		timing[i] = *s.ToModel()
 	}
-	return &models.Lyrics{
+	return &domain.Lyrics{
 		Text:     l.Text,
 		Timing:   timing,
 		Language: l.Language,
 	}
 }
 
-func (t *MongoTablature) ToModel() *models.Tablature {
-	timing := make([]models.Segment, len(t.Timing))
+func (t *MongoTablature) ToModel() *domain.Tablature {
+	timing := make([]domain.Segment, len(t.Timing))
 	for i, s := range t.Timing {
 		timing[i] = *s.ToModel()
 	}
-	return &models.Tablature{
+	return &domain.Tablature{
 		Content: t.Content,
 		Timing:  timing,
 		Format:  t.Format,
 	}
 }
 
-func (s *MongoSegment) ToModel() *models.Segment {
-	return &models.Segment{
+func (s *MongoSegment) ToModel() *domain.Segment {
+	return &domain.Segment{
 		Start:   s.Start,
 		End:     s.End,
 		Content: s.Content,
@@ -84,7 +84,7 @@ func (s *MongoSegment) ToModel() *models.Segment {
 }
 
 // by model
-func (m *MongoMusic) ByModel(model *models.Music) {
+func (m *MongoMusic) ByModel(model *domain.Music) {
 	if model.ID != "" {
 		id, err := primitive.ObjectIDFromHex(model.ID)
 		if err != nil {
@@ -110,7 +110,7 @@ func (m *MongoMusic) ByModel(model *models.Music) {
 	}
 }
 
-func (m *MongoLyrics) ByModel(model *models.Lyrics) {
+func (m *MongoLyrics) ByModel(model *domain.Lyrics) {
 	m.Text = model.Text
 	m.Timing = make([]MongoSegment, len(model.Timing))
 	for i, s := range model.Timing {
@@ -122,7 +122,7 @@ func (m *MongoLyrics) ByModel(model *models.Lyrics) {
 	}
 }
 
-func (m *MongoTablature) ByModel(model *models.Tablature) {
+func (m *MongoTablature) ByModel(model *domain.Tablature) {
 	m.Content = model.Content
 	m.Timing = make([]MongoSegment, len(model.Timing))
 	for i, s := range model.Timing {
@@ -134,7 +134,7 @@ func (m *MongoTablature) ByModel(model *models.Tablature) {
 	}
 }
 
-func (m *MongoSegment) ByModel(model *models.Segment) {
+func (m *MongoSegment) ByModel(model *domain.Segment) {
 	m.Start = model.Start
 	m.End = model.End
 	m.Content = model.Content

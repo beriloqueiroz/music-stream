@@ -3,7 +3,7 @@ package mongodb
 import (
 	"context"
 
-	"github.com/beriloqueiroz/music-stream/pkg/models"
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,7 +19,7 @@ func NewMongoPlaylistRepository(db *mongo.Database) *MongoPlaylistRepository {
 	return &MongoPlaylistRepository{db: db, playlistsColl: db.Collection("playlists")}
 }
 
-func (r *MongoPlaylistRepository) Create(ctx context.Context, playlist *models.Playlist) (string, error) {
+func (r *MongoPlaylistRepository) Create(ctx context.Context, playlist *domain.Playlist) (string, error) {
 	mongoPlaylist := &MongoPlaylist{}
 	mongoPlaylist.ByModel(playlist)
 	result, err := r.playlistsColl.InsertOne(ctx, mongoPlaylist)
@@ -29,7 +29,7 @@ func (r *MongoPlaylistRepository) Create(ctx context.Context, playlist *models.P
 	return result.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
-func (r *MongoPlaylistRepository) FindByID(ctx context.Context, id string, ownerID string) (*models.Playlist, error) {
+func (r *MongoPlaylistRepository) FindByID(ctx context.Context, id string, ownerID string) (*domain.Playlist, error) {
 	playlist := &MongoPlaylist{}
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -46,7 +46,7 @@ func (r *MongoPlaylistRepository) FindByID(ctx context.Context, id string, owner
 	return playlist.ToModel(), nil
 }
 
-func (r *MongoPlaylistRepository) List(ctx context.Context, ownerID string, page int, limit int) ([]*models.Playlist, error) {
+func (r *MongoPlaylistRepository) List(ctx context.Context, ownerID string, page int, limit int) ([]*domain.Playlist, error) {
 	playlists := []*MongoPlaylist{}
 	ownerIDPrimitive, err := primitive.ObjectIDFromHex(ownerID)
 	if err != nil {
@@ -64,14 +64,14 @@ func (r *MongoPlaylistRepository) List(ctx context.Context, ownerID string, page
 		}
 		playlists = append(playlists, playlist)
 	}
-	playlistsModels := make([]*models.Playlist, len(playlists))
+	playlistsModels := make([]*domain.Playlist, len(playlists))
 	for i, playlist := range playlists {
 		playlistsModels[i] = playlist.ToModel()
 	}
 	return playlistsModels, nil
 }
 
-func (r *MongoPlaylistRepository) Update(ctx context.Context, playlist *models.Playlist) error {
+func (r *MongoPlaylistRepository) Update(ctx context.Context, playlist *domain.Playlist) error {
 	mongoPlaylist := &MongoPlaylist{}
 	mongoPlaylist.ByModel(playlist)
 	_, err := r.playlistsColl.UpdateOne(ctx, bson.M{"_id": playlist.ID, "owner_id": playlist.OwnerID}, bson.M{"$set": mongoPlaylist})

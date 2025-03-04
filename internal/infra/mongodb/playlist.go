@@ -3,7 +3,7 @@ package mongodb
 import (
 	"time"
 
-	"github.com/beriloqueiroz/music-stream/pkg/models"
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -24,12 +24,12 @@ type MongoPlaylistMusic struct {
 	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
 }
 
-func (p *MongoPlaylist) ToModel() *models.Playlist {
-	musics := make([]models.PlaylistMusic, len(p.Musics))
+func (p *MongoPlaylist) ToModel() *domain.Playlist {
+	musics := make([]domain.PlaylistMusic, len(p.Musics))
 	for i, music := range p.Musics {
 		musics[i] = music.ToModel()
 	}
-	return &models.Playlist{
+	return &domain.Playlist{
 		ID:        p.ID.Hex(),
 		Name:      p.Name,
 		CreatedAt: p.CreatedAt,
@@ -39,8 +39,8 @@ func (p *MongoPlaylist) ToModel() *models.Playlist {
 	}
 }
 
-func (p *MongoPlaylistMusic) ToModel() models.PlaylistMusic {
-	return models.PlaylistMusic{
+func (p *MongoPlaylistMusic) ToModel() domain.PlaylistMusic {
+	return domain.PlaylistMusic{
 		PlaylistID: p.PlaylistID.Hex(),
 		MusicID:    p.MusicID.Hex(),
 	}
@@ -48,7 +48,7 @@ func (p *MongoPlaylistMusic) ToModel() models.PlaylistMusic {
 
 // by model
 
-func (p *MongoPlaylist) ByModel(model *models.Playlist) {
+func (p *MongoPlaylist) ByModel(model *domain.Playlist) {
 	if model.ID != "" {
 		id, err := primitive.ObjectIDFromHex(model.ID)
 		if err != nil {
@@ -73,7 +73,7 @@ func (p *MongoPlaylist) ByModel(model *models.Playlist) {
 	p.Musics = musics
 }
 
-func (p *MongoPlaylistMusic) ByModel(model *models.PlaylistMusic) {
+func (p *MongoPlaylistMusic) ByModel(model *domain.PlaylistMusic) {
 	p.ID = primitive.NewObjectID()
 	p.CreatedAt = model.CreatedAt
 	playlistID, err := primitive.ObjectIDFromHex(model.PlaylistID)

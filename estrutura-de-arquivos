@@ -16,5 +16,5 @@ music-stream/
 │       └── local.go
 ├── pkg/
 │   └── models/
-│       └── models.go
+│       └── domain.go
 └── go.mod 

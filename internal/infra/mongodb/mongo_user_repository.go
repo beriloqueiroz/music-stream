@@ -3,7 +3,7 @@ package mongodb
 import (
 	"context"
 
-	"github.com/beriloqueiroz/music-stream/pkg/models"
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,7 +23,7 @@ func NewMongoUserRepository(db *mongo.Database) *MongoUserRepository {
 	}
 }
 
-func (r *MongoUserRepository) FindByID(ctx context.Context, id string) (*models.User, error) {
+func (r *MongoUserRepository) FindByID(ctx context.Context, id string) (*domain.User, error) {
 	user := &MongoUser{}
 	idPrimitive, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -36,28 +36,28 @@ func (r *MongoUserRepository) FindByID(ctx context.Context, id string) (*models.
 	return user.ToModel(), nil
 }
 
-func (r *MongoUserRepository) Insert(ctx context.Context, user *models.User) error {
+func (r *MongoUserRepository) Insert(ctx context.Context, user *domain.User) error {
 	mongoUser := &MongoUser{}
 	mongoUser.ByModel(user)
 	_, err := r.usersColl.InsertOne(ctx, mongoUser)
 	return err
 }
 
-func (r *MongoUserRepository) InsertInvite(ctx context.Context, invite *models.Invite) error {
+func (r *MongoUserRepository) InsertInvite(ctx context.Context, invite *domain.Invite) error {
 	mongoInvite := &MongoInvite{}
 	mongoInvite.ByModel(invite)
 	_, err := r.invitesColl.InsertOne(ctx, mongoInvite)
 	return err
 }
 
-func (r *MongoUserRepository) UpdateInvite(ctx context.Context, invite *models.Invite) error {
+func (r *MongoUserRepository) UpdateInvite(ctx context.Context, invite *domain.Invite) error {
 	mongoInvite := &MongoInvite{}
 	mongoInvite.ByModel(invite)
 	_, err := r.invitesColl.UpdateOne(ctx, bson.M{"_id": invite.ID}, bson.M{"$set": mongoInvite})
 	return err
 }
 
-func (r *MongoUserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
+func (r *MongoUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
 	user := &MongoUser{}
 	err := r.usersColl.FindOne(ctx, bson.M{"email": email}).Decode(user)
 	if err != nil {
@@ -66,7 +66,7 @@ func (r *MongoUserRepository) FindByEmail(ctx context.Context, email string) (*m
 	return user.ToModel(), nil
 }
 
-func (r *MongoUserRepository) FindInviteByCode(ctx context.Context, code string) (*models.Invite, error) {
+func (r *MongoUserRepository) FindInviteByCode(ctx context.Context, code string) (*domain.Invite, error) {
 	invite := &MongoInvite{}
 	err := r.invitesColl.FindOne(ctx, bson.M{"code": code}).Decode(invite)
 	if err != nil {

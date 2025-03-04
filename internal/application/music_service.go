@@ -8,7 +8,7 @@ import (
 	"time"
 
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
-	"github.com/beriloqueiroz/music-stream/pkg/models"
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"github.com/beriloqueiroz/music-stream/pkg/storage"
 	"github.com/google/uuid"
 )
@@ -26,7 +26,7 @@ func NewMusicService(storage storage.MusicStorage, musicRepo MusicRepository) *M
 	}
 }
 
-func (s *MusicService) GetMusic(ctx context.Context, id string) (*models.Music, error) {
+func (s *MusicService) GetMusic(ctx context.Context, id string) (*domain.Music, error) {
 	music, err := s.musicRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -115,7 +115,7 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 	}
 
 	// Salvar no MongoDB
-	music := &models.Music{
+	music := &domain.Music{
 		Title:     metadata.Title,
 		Artist:    metadata.Artist,
 		Album:     metadata.Album,

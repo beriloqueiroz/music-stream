@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"github.com/beriloqueiroz/music-stream/internal/helper"
-	"github.com/beriloqueiroz/music-stream/pkg/models"
 )
 
 type PlaylistService struct {
@@ -20,15 +20,15 @@ func NewPlaylistService(playlistRepo PlaylistRepository) *PlaylistService {
 }
 
 // make a crud
-func (s *PlaylistService) CreatePlaylist(ctx context.Context, name string, ownerID string) (*models.Playlist, error) {
+func (s *PlaylistService) CreatePlaylist(ctx context.Context, name string, ownerID string) (*domain.Playlist, error) {
 	if name == "" || ownerID == "" {
 		return nil, errors.New("name and ownerID are required")
 	}
-	playlist := &models.Playlist{
+	playlist := &domain.Playlist{
 		Name:      name,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		Musics:    []models.PlaylistMusic{},
+		Musics:    []domain.PlaylistMusic{},
 		OwnerID:   ownerID,
 	}
 	id, err := s.playlistRepo.Create(ctx, playlist)
@@ -41,7 +41,7 @@ func (s *PlaylistService) CreatePlaylist(ctx context.Context, name string, owner
 	return playlist, nil
 }
 
-func (s *PlaylistService) GetPlaylist(ctx context.Context, id string, ownerID string) (*models.Playlist, error) {
+func (s *PlaylistService) GetPlaylist(ctx context.Context, id string, ownerID string) (*domain.Playlist, error) {
 	if id == "" || ownerID == "" {
 		return nil, errors.New("id and ownerID are required")
 	}
@@ -52,11 +52,11 @@ func (s *PlaylistService) GetPlaylist(ctx context.Context, id string, ownerID st
 	return playlist, nil
 }
 
-func (s *PlaylistService) UpdatePlaylist(ctx context.Context, id string, name string, ownerID string) (*models.Playlist, error) {
+func (s *PlaylistService) UpdatePlaylist(ctx context.Context, id string, name string, ownerID string) (*domain.Playlist, error) {
 	if id == "" || ownerID == "" {
 		return nil, errors.New("id and ownerID are required")
 	}
-	playlist := &models.Playlist{}
+	playlist := &domain.Playlist{}
 	err := s.playlistRepo.Update(ctx, playlist)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (s *PlaylistService) AddMusicToPlaylist(ctx context.Context, playlistID str
 			return errors.New("music already exists in playlist")
 		}
 	}
-	playlist.Musics = append(playlist.Musics, models.PlaylistMusic{
+	playlist.Musics = append(playlist.Musics, domain.PlaylistMusic{
 		PlaylistID: playlistID,
 		MusicID:    musicID,
 		CreatedAt:  time.Now(),
@@ -109,7 +109,7 @@ func (s *PlaylistService) RemoveMusicFromPlaylist(ctx context.Context, playlistI
 	if err != nil {
 		return err
 	}
-	playlist.Musics = helper.RemoveFromSlice(playlist.Musics, func(music models.PlaylistMusic) bool {
+	playlist.Musics = helper.RemoveFromSlice(playlist.Musics, func(music domain.PlaylistMusic) bool {
 		return music.MusicID == musicID
 	})
 	err = s.playlistRepo.Update(ctx, playlist)
@@ -119,7 +119,7 @@ func (s *PlaylistService) RemoveMusicFromPlaylist(ctx context.Context, playlistI
 	return nil
 }
 
-func (s *PlaylistService) GetPlaylists(ctx context.Context, ownerID string, page int, limit int) ([]*models.Playlist, error) {
+func (s *PlaylistService) GetPlaylists(ctx context.Context, ownerID string, page int, limit int) ([]*domain.Playlist, error) {
 	playlists, err := s.playlistRepo.List(ctx, ownerID, page, limit)
 	if err != nil {
 		return nil, err

@@ -3,7 +3,7 @@ package mongodb
 import (
 	"time"
 
-	"github.com/beriloqueiroz/music-stream/pkg/models"
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -24,8 +24,8 @@ type MongoInvite struct {
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 }
 
-func (i *MongoInvite) ToModel() *models.Invite {
-	return &models.Invite{
+func (i *MongoInvite) ToModel() *domain.Invite {
+	return &domain.Invite{
 		ID:        i.ID.Hex(),
 		Code:      i.Code,
 		Email:     i.Email,
@@ -35,8 +35,8 @@ func (i *MongoInvite) ToModel() *models.Invite {
 	}
 }
 
-func (u *MongoUser) ToModel() *models.User {
-	return &models.User{
+func (u *MongoUser) ToModel() *domain.User {
+	return &domain.User{
 		ID:        u.ID.Hex(),
 		Email:     u.Email,
 		Password:  u.Password,
@@ -47,7 +47,7 @@ func (u *MongoUser) ToModel() *models.User {
 
 // by model
 
-func (i *MongoInvite) ByModel(model *models.Invite) {
+func (i *MongoInvite) ByModel(model *domain.Invite) {
 	if model.ID != "" {
 		id, err := primitive.ObjectIDFromHex(model.ID)
 		if err != nil {
@@ -64,7 +64,7 @@ func (i *MongoInvite) ByModel(model *models.Invite) {
 	i.ExpiresAt = model.ExpiresAt
 }
 
-func (u *MongoUser) ByModel(model *models.User) {
+func (u *MongoUser) ByModel(model *domain.User) {
 	id, err := primitive.ObjectIDFromHex(model.ID)
 	if err != nil {
 		return

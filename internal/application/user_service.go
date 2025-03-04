@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
+	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"github.com/beriloqueiroz/music-stream/internal/helper"
-	"github.com/beriloqueiroz/music-stream/pkg/models"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
@@ -24,7 +24,7 @@ func NewUserService(userRepo UserRepository, jwtSecret []byte) *UserService {
 	}
 }
 
-func (s *UserService) CreateInvite(ctx context.Context, email string, whoIsInvitingId string) (*models.Invite, error) {
+func (s *UserService) CreateInvite(ctx context.Context, email string, whoIsInvitingId string) (*domain.Invite, error) {
 	whoIsInviting, err := s.userRepo.FindByID(ctx, whoIsInvitingId)
 	if err != nil {
 		return nil, errors.New("usuário não encontrado")
@@ -33,7 +33,7 @@ func (s *UserService) CreateInvite(ctx context.Context, email string, whoIsInvit
 		return nil, errors.New("usuário tem permissão insuficiente para criar convite")
 	}
 	code := helper.GenerateRandomCode() // Implementar função para gerar código aleatório
-	invite := &models.Invite{
+	invite := &domain.Invite{
 		Code:      code,
 		Email:     email,
 		Used:      false,
@@ -66,7 +66,7 @@ func (s *UserService) Register(ctx context.Context, email, password, inviteCode 
 	}
 
 	// Criar usuário
-	user := &models.User{
+	user := &domain.User{
 		ID:        primitive.NewObjectID().Hex(),
 		Email:     email,
 		Password:  string(hashedPassword),
@@ -89,7 +89,7 @@ func (s *UserService) Register(ctx context.Context, email, password, inviteCode 
 	return nil
 }
 
-func (s *UserService) Login(ctx context.Context, email string, password string) (string, *models.User, error) {
+func (s *UserService) Login(ctx context.Context, email string, password string) (string, *domain.User, error) {
 	user, err := s.userRepo.FindByEmail(ctx, email)
 	if err != nil {
 		return "", nil, errors.New("usuário não encontrado")
