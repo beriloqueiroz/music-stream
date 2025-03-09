@@ -19,9 +19,27 @@ func NewRestServer(db *mongo.Database) *RestServer {
 	return &RestServer{db: db}
 }
 
+func enableCors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (s *RestServer) Start(jwtSecret string, userRepo application.UserRepository, playlistRepo application.PlaylistRepository) {
 	// Configuração das rotas
 	mux := http.NewServeMux()
+
+	// Aplicar middleware CORS
+	handler := enableCors(mux)
 
 	authService := application.NewUserService(userRepo, []byte(jwtSecret))
 	authHandler := rest_server_user.NewUserHandler(authService)
@@ -42,9 +60,14 @@ func (s *RestServer) Start(jwtSecret string, userRepo application.UserRepository
 	mux.Handle("GET /api/playlists", authMiddlewares.AuthMiddleware(http.HandlerFunc(playlistHandler.GetPlaylists)))
 	mux.Handle("POST /api/playlists", authMiddlewares.AuthMiddleware(http.HandlerFunc(playlistHandler.CreatePlaylist)))
 
+	//HEALTHCHECK
+	mux.HandleFunc("api/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
 	// Configuração do servidor
 	srv := &http.Server{
-		Handler:      mux,
+		Handler:      handler,
 		Addr:         ":8080",
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,

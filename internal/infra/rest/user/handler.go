@@ -27,8 +27,10 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	Token string `json:"token"`
-	ID    string `json:"id"`
+	Token   string `json:"token"`
+	ID      string `json:"id"`
+	Email   string `json:"email"`
+	IsAdmin bool   `json:"is_admin"`
 }
 
 type createInviteRequest struct {
@@ -64,7 +66,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(loginResponse{Token: *token, ID: user.ID.Hex()})
+	json.NewEncoder(w).Encode(loginResponse{Token: *token, ID: user.ID.Hex(), Email: user.Email, IsAdmin: user.IsAdmin})
 }
 
 func (h *UserHandler) CreateInvite(w http.ResponseWriter, r *http.Request) {

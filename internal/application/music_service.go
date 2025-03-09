@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log"
 	"time"
 
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
@@ -36,12 +37,14 @@ func (s *MusicService) GetMusic(ctx context.Context, id string) (*domain.Music, 
 }
 
 func (s *MusicService) StreamMusic(req *pb.StreamRequest, stream pb.MusicService_StreamMusicServer) error {
+	log.Println("StreamMusic chamado com query:", req)
+
 	ctx := stream.Context()
 	music, err := s.GetMusic(ctx, req.MusicId)
 	if err != nil {
 		return err
 	}
-	reader, err := s.storage.GetMusic(music.StorageID.String())
+	reader, err := s.storage.GetMusic(music.StorageID.Hex())
 	if err != nil {
 		return err
 	}
@@ -105,10 +108,10 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 		return errors.New("metadata não fornecida")
 	}
 
-	storageUUID := primitive.NewObjectID()
+	storageId := primitive.NewObjectID()
 
 	// Salvar no storage
-	err := s.storage.SaveMusic(storageUUID.String(), &buffer)
+	err := s.storage.SaveMusic(storageId.Hex(), &buffer)
 	if err != nil {
 		return err
 	}
@@ -121,7 +124,7 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 		Title:     metadata.Title,
 		Artist:    metadata.Artist,
 		Album:     metadata.Album,
-		StorageID: storageUUID,
+		StorageID: storageId,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -129,7 +132,7 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 	id, err := s.musicRepo.Create(stream.Context(), music)
 	if err != nil {
 		// Se falhar, tenta remover do storage
-		_ = s.storage.DeleteMusic(storageUUID.String())
+		_ = s.storage.DeleteMusic(storageId.Hex())
 		return err
 	}
 
@@ -141,6 +144,7 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 }
 
 func (s *MusicService) SearchMusic(ctx context.Context, in *pb.SearchRequest) (*pb.SearchResponse, error) {
+	log.Println("SearchMusic chamado com query:", in.Query, "page:", in.Page, "limit:", in.PageSize)
 	query := in.Query
 	page := in.Page
 	limit := in.PageSize
