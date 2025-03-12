@@ -67,4 +67,7 @@ type PlaylistMusic struct {
 	PlaylistID primitive.ObjectID `bson:"playlist_id" json:"playlist_id"`
 	MusicID    primitive.ObjectID `bson:"music_id" json:"music_id"`
 	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
+	Title      string             `bson:"title" json:"title"`
+	Artist     string             `bson:"artist" json:"artist"`
+	Album      string             `bson:"album" json:"album"`
 }

@@ -85,7 +85,7 @@ func main() {
 	go grpcServer.Start()
 
 	RestServer := rest_server.NewRestServer(db, "8080")
-	RestServer.Start(jwtSecret, userRepo, playlistRepo)
+	RestServer.Start(jwtSecret, userRepo, playlistRepo, musicRepo)
 }
 
 func connectMongoDB(ctx context.Context) (*mongo.Client, string, error) {

@@ -2,7 +2,6 @@ package mongodb
 
 import (
 	"context"
-
 	"github.com/beriloqueiroz/music-stream/internal/application"
 	domain "github.com/beriloqueiroz/music-stream/internal/domain/entities"
 	"go.mongodb.org/mongo-driver/bson"
@@ -64,5 +63,31 @@ func (r *MongoMusicRepository) Search(ctx context.Context, query string, page in
 		MusicList: musicsList,
 		Total:     len(musicsList),
 	}, nil
+}
 
+func (r *MongoMusicRepository) FindByIDs(ctx context.Context, ids []string) ([]*domain.Music, error) {
+	objectIDs := make([]primitive.ObjectID, len(ids))
+	for i, id := range ids {
+		objectID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return nil, err
+		}
+		objectIDs[i] = objectID
+	}
+
+	musics, err := r.musicsColl.Find(ctx, bson.M{"_id": bson.M{"$in": objectIDs}})
+	if err != nil {
+		return nil, err
+	}
+
+	var musicsList []*domain.Music
+	for musics.Next(ctx) {
+		var music = &domain.Music{}
+		if err := musics.Decode(&music); err != nil {
+			return nil, err
+		}
+		musicsList = append(musicsList, music)
+	}
+
+	return musicsList, nil
 }

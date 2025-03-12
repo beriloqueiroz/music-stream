@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -58,13 +59,14 @@ func TestRestIntegration(t *testing.T) {
 	restServer := rest_server.NewRestServer(database.Database("music-stream"), port)
 	userRepo := mongodb.NewMongoUserRepository(database.Database("music-stream"))
 	playlistRepo := mongodb.NewMongoPlaylistRepository(database.Database("music-stream"))
-	go restServer.Start(jwtSecret, userRepo, playlistRepo)
+	musicRepo := mongodb.NewMongoMusicRepository(database.Database("music-stream"))
+	go restServer.Start(jwtSecret, userRepo, playlistRepo, musicRepo)
 
 	time.Sleep(1 * time.Second)
 
 	//create admin user in database
 	createAdminUser(database.Database("music-stream"))
-
+	createMusic(database.Database("music-stream"), "66d6d6d6d6d6d6d6d6d6d6d6")
 	// integration tests
 	token := ""
 	userID := ""
@@ -305,12 +307,7 @@ func TestRestIntegration(t *testing.T) {
 	t.Run("TestGetPlaylistAfterAddMusic", func(t *testing.T) {
 		// test get playlist after add music
 		url := "http://localhost:" + port + "/api/playlists/" + playlistID + "/musics"
-		payload := map[string]interface{}{}
-		jsonPayload, err := json.Marshal(payload)
-		if err != nil {
-			t.Fatal(err)
-		}
-		req, err := http.NewRequest("GET", url, bytes.NewBuffer(jsonPayload))
+		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -368,14 +365,7 @@ func TestRestIntegration(t *testing.T) {
 	t.Run("TestGetPlaylistAfterRemoveMusic", func(t *testing.T) {
 		// test get playlist after remove music
 		url := "http://localhost:" + port + "/api/playlists/" + playlistID + "/musics"
-		payload := map[string]interface{}{
-			"owner_id": ownerID,
-		}
-		jsonPayload, err := json.Marshal(payload)
-		if err != nil {
-			t.Fatal(err)
-		}
-		req, err := http.NewRequest("GET", url, bytes.NewBuffer(jsonPayload))
+		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -501,6 +491,20 @@ func createAdminUser(db *mongo.Database) {
 		"email":      "admin@teste.com",
 		"password":   hash,
 		"is_admin":   true,
+		"created_at": time.Now(),
+	})
+}
+
+func createMusic(db *mongo.Database, id string) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	db.Collection("musics").InsertOne(context.Background(), bson.M{
+		"_id":        objectID,
+		"title":      "testmusic",
+		"artist":     "testartist",
+		"album":      "testalbum",
 		"created_at": time.Now(),
 	})
 }

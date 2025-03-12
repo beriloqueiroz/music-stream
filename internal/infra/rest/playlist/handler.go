@@ -147,15 +147,9 @@ func (h *PlaylistHandler) DeletePlaylist(w http.ResponseWriter, r *http.Request)
 
 // GET /api/playlists/{id}/musics
 func (h *PlaylistHandler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
-	var req getPlaylistRequest
 	playlistID := r.PathValue("id")
 	if playlistID == "" {
 		http.Error(w, "Playlist ID is required", http.StatusBadRequest)
-		return
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	ownerID := r.Header.Get("owner_id")

@@ -15,4 +15,5 @@ type MusicRepository interface {
 	FindByID(ctx context.Context, id string) (*domain.Music, error)
 	Create(ctx context.Context, music *domain.Music) (string, error)
 	Search(ctx context.Context, query string, page int, limit int) (*SearchResult, error)
+	FindByIDs(ctx context.Context, ids []string) ([]*domain.Music, error)
 }

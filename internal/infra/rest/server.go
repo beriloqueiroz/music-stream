@@ -35,7 +35,7 @@ func enableCors(next http.Handler) http.Handler {
 	})
 }
 
-func (s *RestServer) Start(jwtSecret string, userRepo application.UserRepository, playlistRepo application.PlaylistRepository) {
+func (s *RestServer) Start(jwtSecret string, userRepo application.UserRepository, playlistRepo application.PlaylistRepository, musicRepo application.MusicRepository) {
 	// Configuração das rotas
 	mux := http.NewServeMux()
 
@@ -50,7 +50,7 @@ func (s *RestServer) Start(jwtSecret string, userRepo application.UserRepository
 	mux.HandleFunc("POST /api/auth/login", authHandler.Login)
 	mux.Handle("POST /api/invites", authMiddlewares.AuthMiddleware(http.HandlerFunc(authHandler.CreateInvite)))
 	// Rotas de playlists
-	playlistService := application.NewPlaylistService(playlistRepo)
+	playlistService := application.NewPlaylistService(playlistRepo, musicRepo)
 	playlistHandler := rest_server_playlist.NewPlaylistHandler(playlistService)
 
 	mux.Handle("DELETE /api/playlists/{id}/musics/{musicId}", authMiddlewares.AuthMiddleware(http.HandlerFunc(playlistHandler.RemoveMusicInPlaylist)))

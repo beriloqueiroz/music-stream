@@ -13,11 +13,13 @@ import (
 
 type PlaylistService struct {
 	playlistRepo PlaylistRepository
+	musicRepo    MusicRepository
 }
 
-func NewPlaylistService(playlistRepo PlaylistRepository) *PlaylistService {
+func NewPlaylistService(playlistRepo PlaylistRepository, musicRepo MusicRepository) *PlaylistService {
 	return &PlaylistService{
 		playlistRepo: playlistRepo,
+		musicRepo:    musicRepo,
 	}
 }
 
@@ -61,6 +63,25 @@ func (s *PlaylistService) GetPlaylist(ctx context.Context, id string, ownerID st
 	playlist, err := s.playlistRepo.FindByID(ctx, id, ownerID)
 	if err != nil {
 		return nil, err
+	}
+	// todo find with musicRepo the music by id
+	musicsIDs := make([]string, len(playlist.Musics))
+	for i, music := range playlist.Musics {
+		musicsIDs[i] = music.MusicID.Hex()
+	}
+	musics, err := s.musicRepo.FindByIDs(ctx, musicsIDs)
+	if err != nil {
+		return nil, err
+	}
+	playlist.Musics = make([]domain.PlaylistMusic, len(musics))
+	for i, music := range musics {
+		playlist.Musics[i] = domain.PlaylistMusic{
+			PlaylistID: playlist.ID,
+			MusicID:    music.ID,
+			Title:      music.Title,
+			Artist:     music.Artist,
+			Album:      music.Album,
+		}
 	}
 	return playlist, nil
 }
@@ -117,9 +138,17 @@ func (s *PlaylistService) AddMusicToPlaylist(ctx context.Context, playlistID str
 		return err
 	}
 
+	music, err := s.musicRepo.FindByID(ctx, musicID)
+	if err != nil {
+		return err
+	}
+
 	playlist.Musics = append(playlist.Musics, domain.PlaylistMusic{
 		PlaylistID: playlist.ID,
 		MusicID:    primitiveMusicID,
+		Title:      music.Title,
+		Artist:     music.Artist,
+		Album:      music.Album,
 		CreatedAt:  time.Now(),
 	})
 	err = s.playlistRepo.Update(ctx, playlist)
