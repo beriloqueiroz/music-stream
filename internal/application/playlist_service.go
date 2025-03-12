@@ -150,6 +150,8 @@ func (s *PlaylistService) AddMusicToPlaylist(ctx context.Context, playlistID str
 		Artist:     music.Artist,
 		Album:      music.Album,
 		CreatedAt:  time.Now(),
+		Duration:   music.Duration,
+		Type:       music.Type,
 	})
 	err = s.playlistRepo.Update(ctx, playlist)
 	if err != nil {

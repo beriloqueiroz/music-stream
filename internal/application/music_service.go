@@ -65,6 +65,7 @@ func (s *MusicService) StreamMusic(req *pb.StreamRequest, stream pb.MusicService
 		chunk := &pb.AudioChunk{
 			Data:           buffer[:n],
 			SequenceNumber: sequence,
+			Type:           music.Type,
 		}
 
 		if err := stream.Send(chunk); err != nil {
@@ -108,6 +109,16 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 		return errors.New("metadata não fornecida")
 	}
 
+	log.Println("Metadata:", metadata)
+
+	if metadata.Title == "" {
+		return errors.New("título não fornecido")
+	}
+
+	if metadata.Type == "" {
+		return errors.New("tipo de arquivo não fornecido")
+	}
+
 	storageId := primitive.NewObjectID()
 
 	// Salvar no storage
@@ -127,6 +138,7 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 		StorageID: storageId,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+		Type:      metadata.Type,
 	}
 
 	id, err := s.musicRepo.Create(stream.Context(), music)

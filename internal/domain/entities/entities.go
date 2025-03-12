@@ -16,6 +16,8 @@ type Music struct {
 	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
 	Lyrics    *Lyrics            `bson:"lyrics,omitempty" json:"lyrics,omitempty"`
 	Tablature *Tablature         `bson:"tablature,omitempty" json:"tablature,omitempty"`
+	Type      string             `bson:"type" json:"type"`
+	Duration  float64            `bson:"duration" json:"duration"`
 }
 
 type Lyrics struct {
@@ -70,4 +72,6 @@ type PlaylistMusic struct {
 	Title      string             `bson:"title" json:"title"`
 	Artist     string             `bson:"artist" json:"artist"`
 	Album      string             `bson:"album" json:"album"`
+	Duration   float64            `bson:"duration" json:"duration"`
+	Type       string             `bson:"type" json:"type"`
 }

@@ -9,12 +9,14 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
 	pb "github.com/beriloqueiroz/music-stream/api/proto"
 	"github.com/dhowden/tag"
 	"github.com/faiface/beep"
+	"github.com/faiface/beep/flac"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"google.golang.org/grpc"
@@ -121,12 +123,6 @@ func playMusic(client pb.MusicServiceClient, musicID string) {
 
 	// Iniciar reprodução em uma goroutine
 	go func() {
-		tempFile, err := os.CreateTemp("", "stream*.mp3")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer os.Remove(tempFile.Name())
-
 		// Receber e salvar chunks
 		stream, err := client.StreamMusic(context.Background(), &pb.StreamRequest{
 			MusicId: musicID,
@@ -134,6 +130,10 @@ func playMusic(client pb.MusicServiceClient, musicID string) {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		// Criar um arquivo temporário com a extensão correta
+		var tempFile *os.File
+		var ext string
 
 		for {
 			chunk, err := stream.Recv()
@@ -144,6 +144,15 @@ func playMusic(client pb.MusicServiceClient, musicID string) {
 				log.Fatal(err)
 			}
 
+			if tempFile == nil {
+				// Definir uma extensão padrão se não houver campo FileName
+				ext = strings.ToLower(chunk.Type)
+				tempFile, err = os.CreateTemp("", "stream*."+ext)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
 			if _, err := tempFile.Write(chunk.Data); err != nil {
 				log.Fatal(err)
 			}
@@ -151,11 +160,21 @@ func playMusic(client pb.MusicServiceClient, musicID string) {
 
 		// Preparar reprodução
 		tempFile.Seek(0, 0)
-		streamer, format, err := mp3.Decode(tempFile)
+
+		// Verificar a extensão do arquivo para decidir o decodificador
+		var streamer beep.Streamer
+		var format beep.Format
+		if ext == "flac" {
+			streamer, format, err = flac.Decode(tempFile) // Usar o decodificador FLAC
+		} else if ext == "mp3" {
+			// Tente usar um pacote alternativo para MP3 se necessário
+			streamer, format, err = mp3.Decode(tempFile) // Usar o decodificador MP3
+		} else {
+			log.Fatalf("Formato de arquivo não suportado: %s", ext)
+		}
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer streamer.Close()
 
 		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
@@ -177,6 +196,7 @@ func playMusic(client pb.MusicServiceClient, musicID string) {
 				fmt.Printf("\rStatus: %s", getStatus(controls.isPaused))
 			case <-done:
 				controls.done <- true
+				speaker.Clear()
 				return
 			}
 		}
@@ -219,6 +239,7 @@ type UploadOptions struct {
 	Title  string
 	Artist string
 	Album  string
+	Type   string
 }
 
 func uploadMusic(client pb.MusicServiceClient, filePath string, opts *UploadOptions) error {
@@ -228,7 +249,7 @@ func uploadMusic(client pb.MusicServiceClient, filePath string, opts *UploadOpti
 	}
 	defer file.Close()
 
-	// Extrair metadados do MP3
+	// Extrair metadados
 	metadata, err := tag.ReadFrom(file)
 	if err != nil {
 		log.Printf("Aviso: não foi possível ler metadados: %v", err)
@@ -247,7 +268,7 @@ func uploadMusic(client pb.MusicServiceClient, filePath string, opts *UploadOpti
 	title := opts.Title
 	artist := opts.Artist
 	album := opts.Album
-
+	typeFile := metadata.FileType()
 	// Se não foram fornecidos, tentar extrair do arquivo
 	if title == "" || artist == "" || album == "" {
 		if metadata != nil {
@@ -280,6 +301,7 @@ func uploadMusic(client pb.MusicServiceClient, filePath string, opts *UploadOpti
 				Title:  title,
 				Artist: artist,
 				Album:  album,
+				Type:   string(typeFile),
 			},
 		},
 	})
