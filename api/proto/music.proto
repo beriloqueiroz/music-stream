@@ -34,6 +34,7 @@ message SearchRequest {
 message SearchResponse {
   repeated Music music_list = 1;
   int32 total = 2;
+  repeated MusicMetadata metadata_list = 3;
 }
 
 message Music {
@@ -56,6 +57,14 @@ message MusicMetadata {
   string artist = 2;
   string album = 3;
   string type = 4;
+  int32 year = 5; // Ano de lançamento
+  string genre = 6; // Gênero musical
+  string composer = 7; // Compositor
+  string label = 8; // Gravadora
+  bytes album_art = 9; // Capa do álbum
+  string comments = 10; // Comentários
+  string isrc = 11; // Código ISRC
+  string url = 12; // URL para informações adicionais
 }
 
 message UploadResponse {

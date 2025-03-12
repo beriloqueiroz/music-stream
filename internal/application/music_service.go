@@ -109,8 +109,6 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 		return errors.New("metadata não fornecida")
 	}
 
-	log.Println("Metadata:", metadata)
-
 	if metadata.Title == "" {
 		return errors.New("título não fornecido")
 	}
@@ -139,6 +137,20 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Type:      metadata.Type,
+		Metadata: &domain.MusicMetadata{
+			Title:    metadata.Title,
+			Artist:   metadata.Artist,
+			Album:    metadata.Album,
+			Type:     metadata.Type,
+			Year:     metadata.Year,
+			Genre:    metadata.Genre,
+			Composer: metadata.Composer,
+			Label:    metadata.Label,
+			AlbumArt: metadata.AlbumArt,
+			Comments: metadata.Comments,
+			Isrc:     metadata.Isrc,
+			Url:      metadata.Url,
+		},
 	}
 
 	id, err := s.musicRepo.Create(stream.Context(), music)

@@ -12,24 +12,26 @@ import (
 type GrpcServer struct {
 	grpcServer   *grpc.Server
 	musicService *application.MusicService
+	port         string
 }
 
-func NewGrpcServer(musicService *application.MusicService) *GrpcServer {
+func NewGrpcServer(musicService *application.MusicService, port string) *GrpcServer {
 	grpcServer := grpc.NewServer()
 	pb.RegisterMusicServiceServer(grpcServer, musicService)
 
 	return &GrpcServer{
 		grpcServer:   grpcServer,
 		musicService: musicService,
+		port:         port,
 	}
 }
 
 func (s *GrpcServer) Start() {
-	lis, err := net.Listen("tcp", ":50051")
+	lis, err := net.Listen("tcp", ":"+s.port)
 	if err != nil {
 		log.Fatalf("Falha ao iniciar servidor gRPC: %v", err)
 	}
-	log.Printf("Servidor gRPC iniciado na porta 50051")
+	log.Printf("Servidor gRPC iniciado na porta %s", s.port)
 	if err := s.grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Falha ao servir gRPC: %v", err)
 	}

@@ -81,7 +81,7 @@ func main() {
 	storage := getStorage()
 	musicService := application.NewMusicService(storage, musicRepo)
 
-	grpcServer := grpc_server.NewGrpcServer(musicService)
+	grpcServer := grpc_server.NewGrpcServer(musicService, "50051")
 	go grpcServer.Start()
 
 	RestServer := rest_server.NewRestServer(db, "8080")

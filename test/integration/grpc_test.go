@@ -57,12 +57,12 @@ func TestGRPCIntegration(t *testing.T) {
 	}
 	musicService := application.NewMusicService(storage, musicRepo)
 
-	grpcServer := grpc_server.NewGrpcServer(musicService)
+	grpcServer := grpc_server.NewGrpcServer(musicService, "50052")
 	go grpcServer.Start()
 
 	time.Sleep(2 * time.Second)
 
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao gRPC: %v", err)
 		os.Exit(1)
@@ -81,9 +81,18 @@ func TestGRPCIntegration(t *testing.T) {
 		err = stream.Send(&pb.UploadRequest{
 			Data: &pb.UploadRequest_Metadata{
 				Metadata: &pb.MusicMetadata{
-					Title:  "Yesterday",
-					Artist: "The Beatles",
-					Album:  "The Beatles 1967-1970",
+					Title:    "Yesterday",
+					Artist:   "The Beatles",
+					Album:    "The Beatles 1967-1970",
+					Type:     "mp3",
+					Year:     1967,
+					Genre:    "Rock",
+					Composer: "John Lennon",
+					Label:    "Apple Records",
+					AlbumArt: []byte{},
+					Comments: "This is a test comment",
+					Isrc:     "ABCD12345678",
+					Url:      "https://example.com/yesterday",
 				},
 			},
 		})

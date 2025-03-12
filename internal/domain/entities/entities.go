@@ -18,6 +18,22 @@ type Music struct {
 	Tablature *Tablature         `bson:"tablature,omitempty" json:"tablature,omitempty"`
 	Type      string             `bson:"type" json:"type"`
 	Duration  float64            `bson:"duration" json:"duration"`
+	Metadata  *MusicMetadata     `bson:"metadata,omitempty" json:"metadata,omitempty"`
+}
+
+type MusicMetadata struct {
+	Title    string `bson:"title,omitempty" json:"title,omitempty"`
+	Artist   string `bson:"artist,omitempty" json:"artist,omitempty"`
+	Album    string `bson:"album,omitempty" json:"album,omitempty"`
+	Type     string `bson:"type,omitempty" json:"type,omitempty"`
+	Year     int32  `bson:"year,omitempty" json:"year,omitempty"`           // Ano de lançamento
+	Genre    string `bson:"genre,omitempty" json:"genre,omitempty"`         // Gênero musical
+	Composer string `bson:"composer,omitempty" json:"composer,omitempty"`   // Compositor
+	Label    string `bson:"label,omitempty" json:"label,omitempty"`         // Gravadora
+	AlbumArt []byte `bson:"album_art,omitempty" json:"album_art,omitempty"` // Capa do álbum
+	Comments string `bson:"comments,omitempty" json:"comments,omitempty"`   // Comentários
+	Isrc     string `bson:"isrc,omitempty" json:"isrc,omitempty"`           // Código ISRC
+	Url      string `bson:"url,omitempty" json:"url,omitempty"`             // URL para informações adicionais
 }
 
 type Lyrics struct {
