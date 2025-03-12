@@ -38,7 +38,6 @@ func main() {
 		}
 	}
 }
-
 func uploadMusics(client pb.MusicServiceClient, folderPath string) error {
 	files, err := os.ReadDir(folderPath)
 	if err != nil {
@@ -47,6 +46,15 @@ func uploadMusics(client pb.MusicServiceClient, folderPath string) error {
 
 	for _, file := range files {
 		if file.IsDir() {
+			// Recursively process subfolders
+			err = uploadMusics(client, filepath.Join(folderPath, file.Name()))
+			if err != nil {
+				return fmt.Errorf("erro ao processar subdiretório: %v", err)
+			}
+			continue
+		}
+
+		if (filepath.Ext(file.Name()) != ".mp3") && (filepath.Ext(file.Name()) != ".flac") {
 			continue
 		}
 
@@ -91,6 +99,7 @@ func uploadMusic(client pb.MusicServiceClient, filePath string) error {
 	title := ""
 	artist := ""
 	album := ""
+	typeFile := metadata.FileType()
 
 	// Se não foram fornecidos, tentar extrair do arquivo
 	if title == "" || artist == "" || album == "" {
@@ -121,9 +130,21 @@ func uploadMusic(client pb.MusicServiceClient, filePath string) error {
 	err = stream.Send(&pb.UploadRequest{
 		Data: &pb.UploadRequest_Metadata{
 			Metadata: &pb.MusicMetadata{
-				Title:  title,
-				Artist: artist,
-				Album:  album,
+				Title:    title,
+				Artist:   artist,
+				Album:    album,
+				Type:     string(typeFile),
+				Comments: metadata.Comment(),
+				AlbumArt: func() []byte {
+					if metadata.Picture() != nil {
+						return metadata.Picture().Data
+					}
+					return nil
+				}(),
+				AlbumArtType: metadata.Picture().Ext,
+				Genre:        metadata.Genre(),
+				Composer:     metadata.Composer(),
+				Year:         int32(metadata.Year()),
 			},
 		},
 	})
