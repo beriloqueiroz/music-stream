@@ -12,11 +12,12 @@ import (
 )
 
 type RestServer struct {
-	db *mongo.Database
+	db   *mongo.Database
+	port string
 }
 
-func NewRestServer(db *mongo.Database) *RestServer {
-	return &RestServer{db: db}
+func NewRestServer(db *mongo.Database, port string) *RestServer {
+	return &RestServer{db: db, port: port}
 }
 
 func enableCors(next http.Handler) http.Handler {
@@ -66,9 +67,12 @@ func (s *RestServer) Start(jwtSecret string, userRepo application.UserRepository
 		w.Write([]byte("OK"))
 	})
 	// Configuração do servidor
+	if s.port == "" {
+		s.port = "8080"
+	}
 	srv := &http.Server{
 		Handler:      handler,
-		Addr:         ":8080",
+		Addr:         ":" + s.port,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}

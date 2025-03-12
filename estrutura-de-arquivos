@@ -17,4 +17,11 @@ music-stream/
 ├── pkg/
 │   └── models/
 │       └── domain.go
-└── go.mod 
+└── go.mod
+
+db.users.insertOne({
+email: "admin@musga.com",
+password: "$2a$10$QuqmCrEcatwGjPQ6k1s3EeJFbPtoMyIsKLsDr0lp5pPNDGWhC7eEC",
+is_admin: true,
+created_at: new Date()
+});

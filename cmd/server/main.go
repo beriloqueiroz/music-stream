@@ -84,7 +84,7 @@ func main() {
 	grpcServer := grpc_server.NewGrpcServer(musicService)
 	go grpcServer.Start()
 
-	RestServer := rest_server.NewRestServer(db)
+	RestServer := rest_server.NewRestServer(db, "8080")
 	RestServer.Start(jwtSecret, userRepo, playlistRepo)
 }
 

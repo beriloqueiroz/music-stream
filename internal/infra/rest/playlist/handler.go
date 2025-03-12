@@ -174,10 +174,6 @@ func (h *PlaylistHandler) GetPlaylist(w http.ResponseWriter, r *http.Request) {
 // GET /api/playlists
 func (h *PlaylistHandler) GetPlaylists(w http.ResponseWriter, r *http.Request) {
 	var req getPlaylistRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 	ownerID := r.Header.Get("owner_id")
 	if ownerID == "" {
 		http.Error(w, "Owner ID is required", http.StatusBadRequest)

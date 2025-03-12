@@ -26,6 +26,7 @@ import (
 // to run : go test  ./test/integration/rest_test.go
 
 func TestRestIntegration(t *testing.T) {
+	port := "8099"
 	if testing.Short() {
 		t.Skip("Pulando testes de integração")
 	}
@@ -54,7 +55,7 @@ func TestRestIntegration(t *testing.T) {
 		jwtSecret = "babau123"
 	}
 
-	restServer := rest_server.NewRestServer(database.Database("music-stream"))
+	restServer := rest_server.NewRestServer(database.Database("music-stream"), port)
 	userRepo := mongodb.NewMongoUserRepository(database.Database("music-stream"))
 	playlistRepo := mongodb.NewMongoPlaylistRepository(database.Database("music-stream"))
 	go restServer.Start(jwtSecret, userRepo, playlistRepo)
@@ -69,7 +70,7 @@ func TestRestIntegration(t *testing.T) {
 	userID := ""
 	t.Run("TestLogin", func(t *testing.T) {
 		// test login
-		url := "http://localhost:8080/api/auth/login"
+		url := "http://localhost:" + port + "/api/auth/login"
 		payload := map[string]interface{}{
 			"email":    "admin@teste.com",
 			"password": "12365478",
@@ -108,7 +109,7 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("TestCreateInvite", func(t *testing.T) {
 		// test create invite
-		url := "http://localhost:8080/api/invites"
+		url := "http://localhost:" + port + "/api/invites"
 		payload := map[string]interface{}{
 			"email": "testuser@teste.com",
 		}
@@ -144,7 +145,7 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("TestCreateUserWithInviteCode", func(t *testing.T) {
 		// test create user
-		url := "http://localhost:8080/api/auth/register"
+		url := "http://localhost:" + port + "/api/auth/register"
 		payload := map[string]interface{}{
 			"email":       "testuser@teste.com",
 			"password":    "testpassword",
@@ -170,7 +171,7 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("TestCreateUserWithoutInviteCode", func(t *testing.T) {
 		// test create user
-		url := "http://localhost:8080/api/auth/register"
+		url := "http://localhost:" + port + "/api/auth/register"
 		payload := map[string]interface{}{
 			"email":       "testuser2@teste.com",
 			"password":    "testpassword2",
@@ -196,7 +197,7 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("LoginWithNewUserInvited", func(t *testing.T) {
 		// test login with new user invited
-		url := "http://localhost:8080/api/auth/login"
+		url := "http://localhost:" + port + "/api/auth/login"
 		payload := map[string]interface{}{
 			"email":    "testuser@teste.com",
 			"password": "testpassword",
@@ -237,7 +238,7 @@ func TestRestIntegration(t *testing.T) {
 	// playlist rest api integration test
 	t.Run("TestCreatePlaylist", func(t *testing.T) {
 		// test create playlist
-		url := "http://localhost:8080/api/playlists"
+		url := "http://localhost:" + port + "/api/playlists"
 		payload := map[string]interface{}{
 			"name": "testplaylist",
 		}
@@ -278,7 +279,7 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("TestAddMusicInPlaylist", func(t *testing.T) {
 		// test add music in playlist
-		url := "http://localhost:8080/api/playlists/" + playlistID + "/musics"
+		url := "http://localhost:" + port + "/api/playlists/" + playlistID + "/musics"
 		payload := map[string]interface{}{
 			"music_id": "66d6d6d6d6d6d6d6d6d6d6d6",
 		}
@@ -303,7 +304,7 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("TestGetPlaylistAfterAddMusic", func(t *testing.T) {
 		// test get playlist after add music
-		url := "http://localhost:8080/api/playlists/" + playlistID + "/musics"
+		url := "http://localhost:" + port + "/api/playlists/" + playlistID + "/musics"
 		payload := map[string]interface{}{}
 		jsonPayload, err := json.Marshal(payload)
 		if err != nil {
@@ -341,7 +342,7 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("TestRemoveMusicInPlaylist", func(t *testing.T) {
 		// test remove music in playlist
-		url := "http://localhost:8080/api/playlists/" + playlistID + "/musics/66d6d6d6d6d6d6d6d6d6d6d6"
+		url := "http://localhost:" + port + "/api/playlists/" + playlistID + "/musics/66d6d6d6d6d6d6d6d6d6d6d6"
 		payload := map[string]interface{}{
 			"owner_id": ownerID,
 		}
@@ -366,7 +367,7 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("TestGetPlaylistAfterRemoveMusic", func(t *testing.T) {
 		// test get playlist after remove music
-		url := "http://localhost:8080/api/playlists/" + playlistID + "/musics"
+		url := "http://localhost:" + port + "/api/playlists/" + playlistID + "/musics"
 		payload := map[string]interface{}{
 			"owner_id": ownerID,
 		}
@@ -405,7 +406,7 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("TestUpdatePlaylist", func(t *testing.T) {
 		// test update playlist
-		url := "http://localhost:8080/api/playlists/" + playlistID
+		url := "http://localhost:" + port + "/api/playlists/" + playlistID
 		payload := map[string]interface{}{
 			"name": "testplaylist2",
 		}
@@ -440,13 +441,11 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("TestGetPlaylists", func(t *testing.T) {
 		// test get playlists
-		url := "http://localhost:8080/api/playlists"
-		payload := map[string]interface{}{}
-		jsonPayload, err := json.Marshal(payload)
+		url := "http://localhost:" + port + "/api/playlists"
 		if err != nil {
 			t.Fatal(err)
 		}
-		req, err := http.NewRequest("GET", url, bytes.NewBuffer(jsonPayload))
+		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -474,7 +473,7 @@ func TestRestIntegration(t *testing.T) {
 
 	t.Run("TestDeletePlaylist", func(t *testing.T) {
 		// test delete playlist
-		url := "http://localhost:8080/api/playlists/" + playlistID
+		url := "http://localhost:" + port + "/api/playlists/" + playlistID
 		req, err := http.NewRequest("DELETE", url, nil)
 		if err != nil {
 			t.Fatal(err)
