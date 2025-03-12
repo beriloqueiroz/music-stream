@@ -298,10 +298,21 @@ func uploadMusic(client pb.MusicServiceClient, filePath string, opts *UploadOpti
 	err = stream.Send(&pb.UploadRequest{
 		Data: &pb.UploadRequest_Metadata{
 			Metadata: &pb.MusicMetadata{
-				Title:  title,
-				Artist: artist,
-				Album:  album,
-				Type:   string(typeFile),
+				Title:    title,
+				Artist:   artist,
+				Album:    album,
+				Type:     string(typeFile),
+				Comments: metadata.Comment(),
+				AlbumArt: func() []byte {
+					if metadata.Picture() != nil {
+						return metadata.Picture().Data
+					}
+					return nil
+				}(),
+				AlbumArtType: metadata.Picture().Ext,
+				Genre:        metadata.Genre(),
+				Composer:     metadata.Composer(),
+				Year:         int32(metadata.Year()),
 			},
 		},
 	})

@@ -19,7 +19,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func getStorage() storage.MusicStorage {
+func getStorage() storage.Storage {
 	if os.Getenv("ENV") == "production" {
 		sess, err := session.NewSession(&aws.Config{
 			Region: aws.String("us-east-1"),

@@ -62,9 +62,10 @@ message MusicMetadata {
   string composer = 7; // Compositor
   string label = 8; // Gravadora
   bytes album_art = 9; // Capa do álbum
-  string comments = 10; // Comentários
-  string isrc = 11; // Código ISRC
-  string url = 12; // URL para informações adicionais
+  string album_art_type = 10;//tipo do arquivo da capa
+  string comments = 11; // Comentários
+  string isrc = 12; // Código ISRC
+  string url = 13; // URL para informações adicionais
 }
 
 message UploadResponse {

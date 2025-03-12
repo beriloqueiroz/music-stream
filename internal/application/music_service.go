@@ -16,11 +16,11 @@ import (
 
 type MusicService struct {
 	pb.UnimplementedMusicServiceServer
-	storage   storage.MusicStorage
+	storage   storage.Storage
 	musicRepo MusicRepository
 }
 
-func NewMusicService(storage storage.MusicStorage, musicRepo MusicRepository) *MusicService {
+func NewMusicService(storage storage.Storage, musicRepo MusicRepository) *MusicService {
 	return &MusicService{
 		storage:   storage,
 		musicRepo: musicRepo,
@@ -44,7 +44,7 @@ func (s *MusicService) StreamMusic(req *pb.StreamRequest, stream pb.MusicService
 	if err != nil {
 		return err
 	}
-	reader, err := s.storage.GetMusic(music.StorageID.Hex())
+	reader, err := s.storage.GetItem(music.StorageID.Hex())
 	if err != nil {
 		return err
 	}
@@ -120,12 +120,29 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 	storageId := primitive.NewObjectID()
 
 	// Salvar no storage
-	err := s.storage.SaveMusic(storageId.Hex(), &buffer)
+	err := s.storage.SaveItem(storageId.Hex(), &buffer)
 	if err != nil {
 		return err
 	}
 
 	musicID := primitive.NewObjectID()
+
+	// salve AlbumArt image and get Id
+	storageAlbumImageId := primitive.NewObjectID()
+
+	// Salvar no storage
+	if metadata.AlbumArt != nil {
+		ext := ".jpeg"
+		if metadata.AlbumArtType != "" {
+			ext = "." + metadata.AlbumArtType
+		}
+		bufferAlbumArt := bytes.NewBuffer(metadata.AlbumArt)
+		name := storageAlbumImageId.Hex() + ext
+		err = s.storage.SaveItem(name, bufferAlbumArt)
+		if err != nil {
+			return err
+		}
+	}
 
 	// Salvar no MongoDB
 	music := &domain.Music{
@@ -146,7 +163,7 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 			Genre:    metadata.Genre,
 			Composer: metadata.Composer,
 			Label:    metadata.Label,
-			AlbumArt: metadata.AlbumArt,
+			AlbumArt: storageAlbumImageId.Hex(),
 			Comments: metadata.Comments,
 			Isrc:     metadata.Isrc,
 			Url:      metadata.Url,
@@ -156,7 +173,7 @@ func (s *MusicService) UploadMusic(stream pb.MusicService_UploadMusicServer) err
 	id, err := s.musicRepo.Create(stream.Context(), music)
 	if err != nil {
 		// Se falhar, tenta remover do storage
-		_ = s.storage.DeleteMusic(storageId.Hex())
+		_ = s.storage.DeleteItem(storageId.Hex())
 		return err
 	}
 

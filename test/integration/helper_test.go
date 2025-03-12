@@ -139,7 +139,7 @@ func (h *TestHelper) StartMinioContainer(ctx context.Context) (testcontainers.Co
 	return container, nil
 }
 
-func (h *TestHelper) GetMinioStorage(ctx context.Context, container testcontainers.Container) (storage.MusicStorage, error) {
+func (h *TestHelper) GetMinioStorage(ctx context.Context, container testcontainers.Container) (storage.Storage, error) {
 
 	endpoint, err := container.Endpoint(ctx, "http")
 	if err != nil {

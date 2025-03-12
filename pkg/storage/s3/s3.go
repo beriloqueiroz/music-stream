@@ -36,7 +36,7 @@ func NewS3Storage(bucket string, sess *session.Session) *S3Storage {
 	}
 }
 
-func (s *S3Storage) GetMusic(id string) (io.ReadCloser, error) {
+func (s *S3Storage) GetItem(id string) (io.ReadCloser, error) {
 	output, err := s.client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(id),
@@ -47,7 +47,7 @@ func (s *S3Storage) GetMusic(id string) (io.ReadCloser, error) {
 	return output.Body, nil
 }
 
-func (s *S3Storage) SaveMusic(id string, data io.Reader) error {
+func (s *S3Storage) SaveItem(id string, data io.Reader) error {
 	// Primeiro, tenta ler um pouco do arquivo para ver o tamanho
 	buf := &bytes.Buffer{}
 	n, err := io.CopyN(buf, data, s.maxMemorySize+1)
@@ -81,7 +81,7 @@ func (s *S3Storage) SaveMusic(id string, data io.Reader) error {
 	return err
 }
 
-func (s *S3Storage) DeleteMusic(id string) error {
+func (s *S3Storage) DeleteItem(id string) error {
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(id),

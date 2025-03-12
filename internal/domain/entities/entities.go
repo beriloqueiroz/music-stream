@@ -30,7 +30,7 @@ type MusicMetadata struct {
 	Genre    string `bson:"genre,omitempty" json:"genre,omitempty"`         // Gênero musical
 	Composer string `bson:"composer,omitempty" json:"composer,omitempty"`   // Compositor
 	Label    string `bson:"label,omitempty" json:"label,omitempty"`         // Gravadora
-	AlbumArt []byte `bson:"album_art,omitempty" json:"album_art,omitempty"` // Capa do álbum
+	AlbumArt string `bson:"album_art,omitempty" json:"album_art,omitempty"` // Capa do álbum
 	Comments string `bson:"comments,omitempty" json:"comments,omitempty"`   // Comentários
 	Isrc     string `bson:"isrc,omitempty" json:"isrc,omitempty"`           // Código ISRC
 	Url      string `bson:"url,omitempty" json:"url,omitempty"`             // URL para informações adicionais

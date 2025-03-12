@@ -74,10 +74,10 @@ func TestStorageIntegration(t *testing.T) {
 	storage := s3storage.NewS3Storage("test-bucket", sess)
 
 	testData := []byte("test music data")
-	err = storage.SaveMusic("test-id", bytes.NewReader(testData))
+	err = storage.SaveItem("test-id", bytes.NewReader(testData))
 	assert.NoError(t, err)
 
-	reader, err := storage.GetMusic("test-id")
+	reader, err := storage.GetItem("test-id")
 	assert.NoError(t, err)
 	defer reader.Close()
 
@@ -85,6 +85,6 @@ func TestStorageIntegration(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, testData, data)
 
-	err = storage.DeleteMusic("test-id")
+	err = storage.DeleteItem("test-id")
 	assert.NoError(t, err)
 }

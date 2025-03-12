@@ -16,12 +16,12 @@ func NewLocalStorage(baseDir string) *LocalStorage {
 	}
 }
 
-func (s *LocalStorage) GetMusic(id string) (io.ReadCloser, error) {
+func (s *LocalStorage) GetItem(id string) (io.ReadCloser, error) {
 	path := filepath.Join(s.baseDir, id+".mp3")
 	return os.Open(path)
 }
 
-func (s *LocalStorage) SaveMusic(id string, data io.Reader) error {
+func (s *LocalStorage) SaveItem(id string, data io.Reader) error {
 	path := filepath.Join(s.baseDir, id+".mp3")
 	file, err := os.Create(path)
 	if err != nil {
@@ -33,7 +33,7 @@ func (s *LocalStorage) SaveMusic(id string, data io.Reader) error {
 	return err
 }
 
-func (s *LocalStorage) DeleteMusic(id string) error {
+func (s *LocalStorage) DeleteItem(id string) error {
 	path := filepath.Join(s.baseDir, id+".mp3")
 	return os.Remove(path)
 }
